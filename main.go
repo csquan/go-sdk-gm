@@ -4,17 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
-	_ "net/http"
 	"os"
-	"runtime/debug"
 	"time"
-	_ "time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	_ "github.com/gorilla/mux"
 	_ "github.com/hyperledger/fabric-protos-go/common"
 	"github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/common/cauthdsl"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
@@ -22,6 +19,7 @@ import (
 	mspclient "github.com/hyperledger/fabric-sdk-go/pkg/client/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
@@ -45,10 +43,12 @@ var sdk *fabsdk.FabricSDK
 
 func main() {
 
-	sdk, _ = fabsdk.New(config.FromFile(org1CfgPath))
-	//if err != nil {
-	//	log.Panicf("failed to create fabric sdk: %s", err)
-	//}
+	//here have a trap of comma,use sdk1 to solve
+	sdk1, err := fabsdk.New(config.FromFile(org1CfgPath))
+	if err != nil {
+		log.Panicf("failed to create fabric sdk: %s", err)
+	}
+	sdk = sdk1
 
 	r := mux.NewRouter()
 	r.HandleFunc("/users", login).Methods("POST")
@@ -65,21 +65,6 @@ func main() {
 	r.Handle("/channels/{channelName}/chaincodes", authMiddleware(http.HandlerFunc(getInstantiatedChaincodes))).Methods("GET")
 	r.Handle("/channels", authMiddleware(http.HandlerFunc(getChannels))).Methods("GET")
 	http.ListenAndServe(":4000", handlers.LoggingHandler(os.Stdout, r))
-	//createChannel(sdk)
-	//getChannels(sdk)
-	//joinChannel(sdk)
-	//installChainCode(sdk)  //debug ok
-	//instantiateChainCode(sdk)
-	//getBlockByNumber(sdk)
-	//getTransactionByID(sdk, "45db61b8421b8a2b2c6e3afe1dc8f3beb8b16c356d92805d2657c337f86f2912")
-	/*ccp := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"))
-	cc, err := channel.New(ccp)
-	if err != nil {
-		log.Panicf("failed to create channel client: %s", err)
-	}
-
-	query(cc)*/
-	//execute(cc)
 }
 
 func authMiddleware(next http.Handler) http.Handler {
@@ -90,7 +75,7 @@ func authMiddleware(next http.Handler) http.Handler {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 				}
-				return []byte("thisismysecret"), nil
+				return []byte("123"), nil
 			})
 			if err == nil {
 				if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
@@ -109,9 +94,25 @@ func authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// GenerateRandomID generates random ID
+func GenerateRandomID() string {
+	return randomString(10)
+}
+
+// Utility to create random string of strlen length
+func randomString(strlen int) string {
+	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+	result := make([]byte, strlen)
+	seed := rand.NewSource(time.Now().UnixNano())
+	rnd := rand.New(seed)
+	for i := 0; i < strlen; i++ {
+		result[i] = chars[rnd.Intn(len(chars))]
+	}
+	return string(result)
+}
+
 func login(w http.ResponseWriter, r *http.Request) {
-	log.Print("==================== LOGIN ==================")
-	// define response
+	log.Print("================== LOGIN ==================")
 	type response struct {
 		Success bool
 		Message string
@@ -124,7 +125,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	userName := r.Form.Get("username")
 	orgName := r.Form.Get("orgName")
-        secret := r.Form.Get("secret")
+	secret := r.Form.Get("secret")
 	if userName != "" && orgName != "" {
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"username": userName,
@@ -132,7 +133,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 			"exp":      time.Now().Unix() + 360000,
 		})
 		tokenString, err := token.SignedString([]byte(secret))
-		ctxProvider := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg("Org1"))
+		ctxProvider := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg(orgName))
 		if ctxProvider == nil {
 			fmt.Println("failed to create ctxProvider")
 			return
@@ -142,18 +143,47 @@ func login(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 			return
 		}
+
 		_, err = msp.GetSigningIdentity(userName)
-		/*if err != ErrUserNotFound {
-			//t.Fatal("Expected to not find user")
-		}*/
-		err = msp.Enroll(userName, mspclient.WithSecret("enrollmentSecret"), mspclient.WithProfile("tls"))
-fmt.Println("enroll err")
-fmt.Println(err)
-		res := response{
-			Success: true,
-			Message: err.Error(),
+		if err != nil {
+			log.Printf("Check if user %s is enrolled: %s", userName, err.Error())
+			testAttributes := []mspclient.Attribute{
+				{
+					Name:  GenerateRandomID(),
+					Value: fmt.Sprintf("%s:ecert", GenerateRandomID()),
+					ECert: true,
+				},
+				{
+					Name:  GenerateRandomID(),
+					Value: fmt.Sprintf("%s:ecert", GenerateRandomID()),
+					ECert: true,
+				},
+			}
+			// Register the new user
+			identity, _ := msp.GetIdentity(userName)
+			if true {
+				log.Printf("User %s does not exist, registering new user", userName)
+				_, err = msp.Register(&mspclient.RegistrationRequest{
+					Name:        userName,
+					Type:        orgName,
+					Attributes:  testAttributes,
+					Affiliation: orgName,
+					Secret:      secret,
+				})
+			} else {
+				log.Printf("Identity: %s", identity.Secret)
+			}
+			log.Printf("secret: %s ", secret)
+
 		}
 
+		err = msp.Enroll(userName, mspclient.WithSecret("123"))
+		res := response{Success: true, Message: "success to enroll user"}
+		if err != nil {
+			log.Printf("enroll err：%s", err.Error())
+			res.Success = false
+			res.Message = err.Error()
+		}
 		res.Token = tokenString
 		out, err := json.Marshal(res)
 		w.Header().Set("Content-Type", "application/json")
@@ -164,16 +194,118 @@ fmt.Println(err)
 }
 
 func getChainInfo(w http.ResponseWriter, r *http.Request) {
+	log.Print("================ GET CHANNEL INFORMATION ======================")
+	// define response
+	type response struct {
+		Success bool
+		Message string
+	}
+	vars := mux.Vars(r)
+	username := "Admin"
+	orgName := r.Header.Get("orgName")
+	log.Print(username)
+	log.Print(orgName)
+	channelContext := sdk.ChannelContext(vars["channelName"], fabsdk.WithUser(username), fabsdk.WithOrg(orgName))
+	client, err := ledger.New(channelContext)
+	if err != nil {
+		log.Fatalf("Failed to create new ledger client: %s", err)
+	}
+
+	blockchainInfo, _ := client.QueryInfo(ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
+	type chainInfo struct {
+		Height            uint64
+		CurrentBlockHash  string
+		PreviousBlockHash string
+	}
+	bci := chainInfo{}
+	bci.Height = blockchainInfo.BCI.Height
+	bci.CurrentBlockHash = fmt.Sprintf("%x", blockchainInfo.BCI.CurrentBlockHash)
+	bci.PreviousBlockHash = fmt.Sprintf("%x", blockchainInfo.BCI.PreviousBlockHash)
+	bcs, _ := json.Marshal(bci)
+
+	res := response{
+		Success: true,
+		Message: string(bcs[:]),
+	}
+	ret, err := json.Marshal(res)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(ret)
 }
 
 func getInstalledChaincodes(w http.ResponseWriter, r *http.Request) {
+	log.Print("================ GET INSTALLED CHAINCODES ======================")
+	// define response
+	type response struct {
+		Success bool
+		Message string
+	}
+	org1AdminClientContext := sdk.Context(fabsdk.WithUser("AdminOrg1"), fabsdk.WithOrg("Org1"))
+	client, err := resmgmt.New(org1AdminClientContext)
+	if err != nil {
+		log.Fatalf("Failed to create new resource management client: %s", err)
+	}
+	endpoint := r.URL.Query().Get("peer")
+	chaincodeQueryRes, err := client.QueryInstalledChaincodes(resmgmt.WithTargetEndpoints(endpoint))
+	if err != nil {
+		log.Fatalf("Failed to QueryInstalledChaincodes: %s", err.Error())
+	}
+	out1, _ := json.Marshal(chaincodeQueryRes)
+	res := response{
+		Success: true,
+		Message: string(out1[:]),
+	}
+
+	out, err := json.Marshal(res)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
 }
 
 func getInstantiatedChaincodes(w http.ResponseWriter, r *http.Request) {
-}
+	log.Print("================ GET INSTANTIATED CHAINCODES ======================")
+	// define response
+	type response struct {
+		Success bool
+		Message string
+	}
+	vars := mux.Vars(r)
+	org1AdminClientContext := sdk.Context(fabsdk.WithUser("AdminOrg1"), fabsdk.WithOrg("Org1"))
+	client, err := resmgmt.New(org1AdminClientContext)
+	if err != nil {
+		log.Fatalf("Failed to create new resource management client: %s", err)
+	}
 
+	endpoint := r.URL.Query().Get("peer")
+	chaincodeQueryRes, err := client.QueryInstantiatedChaincodes(vars["channelName"], resmgmt.WithTargetEndpoints(endpoint))
+	if err != nil {
+		log.Fatalf("Failed to QueryInstantiatedChaincodes: %s", err.Error())
+	}
+	out1, _ := json.Marshal(chaincodeQueryRes)
+
+	res := response{
+		Success: true,
+		Message: string(out1[:]),
+	}
+	out, err := json.Marshal(res)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
+}
 func createChannel(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("================ CREATE CHANNEL ======================")
+	log.Print("================ CREATE CHANNEL ======================")
+
+	type response struct {
+		Success bool
+		Message string
+	}
+
+	type channelConfig struct {
+		Name string
+		Path string
+		Org  string
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	channel := channelConfig{}
+	decoder.Decode(&channel)
 
 	clientContext := sdk.Context(fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(ordererOrgName))
 
@@ -181,62 +313,70 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 	// Supply user that has privileges to create channel (in this case orderer admin)
 	resMgmtClient, err := resmgmt.New(clientContext)
 	if err != nil {
-		//t.Fatalf("Failed to create channel management client: %s", err)
+		log.Printf("Failed to create channel management client: %s", err.Error())
 	}
 
 	mspClient, err := mspclient.New(sdk.Context(), mspclient.WithOrg(orgName))
 	if err != nil {
-		//t.Fatal(err)
+		log.Print(err)
 	}
 	adminIdentity, err := mspClient.GetSigningIdentity(orgAdmin)
 	if err != nil {
-		//t.Fatal(err)
+		log.Print(err)
 	}
 	req := resmgmt.SaveChannelRequest{ChannelID: channelID,
-		ChannelConfigPath: "./mychannel.tx",
+		ChannelConfigPath: channel.Path,
 		SigningIdentities: []msp.SigningIdentity{adminIdentity}}
 	_, err = resMgmtClient.SaveChannel(req, resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com"))
-	debug.PrintStack()
-	var str string
-	if err == nil {
-		str = "success to create channel"
-	} else {
-		fmt.Println(err)
-		str = err.Error()
+	res := response{Success: true, Message: "success to create channel"}
+	if err != nil {
+		res.Message = err.Error()
+		res.Success = false
 	}
-	fmt.Println(str)
-	out, err := json.Marshal(str)
+	out, err := json.Marshal(res)
 	w.Write(out)
 }
 func joinChannel(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("================ JOIN CHANNEL ======================")
+	log.Print("================ JOIN CHANNEL ======================")
+
+	type response struct {
+		Success bool
+		Message string
+	}
+	type joinConfig struct {
+		Org string
+	}
+	decoder := json.NewDecoder(r.Body)
+	join := joinConfig{}
+	decoder.Decode(&join)
 
 	//prepare context
-	adminContext := sdk.Context(fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
+	adminContext := sdk.Context(fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(join.Org))
 
 	// Org resource management client
 	orgResMgmt, err := resmgmt.New(adminContext)
 	if err != nil {
-		//t.Fatalf("Failed to create new resource management client: %s", err)
+		log.Panicf("Failed to create new resource management client: %s", err.Error())
 	}
 
 	// Org peers join channel
 	if err = orgResMgmt.JoinChannel(channelID, resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com")); err != nil {
-		fmt.Println("Org peers failed to JoinChannel: %s", err)
+		log.Panicf("Org peers failed to JoinChannel: %s", err.Error())
 	}
-	var str string
-	if err == nil {
-		str = "success to join channel"
-	} else {
-		str = err.Error()
+	res := response{
+		Success: true,
+		Message: "success to join channel",
+	}
+	if err != nil {
+		res.Message = err.Error()
+		res.Success = false
 	}
 
-	fmt.Println(str)
-	out, err := json.Marshal(str)
+	out, err := json.Marshal(res)
 	w.Write(out)
 }
 func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("==================== GET BLOCK BY NUMBER ==================")
+	log.Print("==================== GET BLOCK BY NUMBER ==================")
 
 	// define response
 	type response struct {
@@ -251,22 +391,33 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	resMgmtClient, err := resmgmt.New(clientContext)
 
 	ret, err := resMgmtClient.QueryConfigBlockFromOrderer(channelID, resmgmt.WithOrdererEndpoint("orderer.example.com"))
-	if err != nil {
-		fmt.Printf("QueryConfigBlockFromOrderer return error: %s", err)
+	res := response{
+		Success: true,
+		Message: "",
 	}
 
-	fmt.Printf("GET BLOCK BY NUMBER sucess")
-	//	res, err := json.Marshal(ret)
-	fmt.Println(ret)
-	out, err := json.Marshal(ret)
+	if err != nil {
+		res.Message = err.Error()
+		res.Success = false
+		log.Panicf("QueryConfigBlockFromOrderer return error: %s", err.Error())
+	} else {
+		log.Print("====getBlockByNumber success=============")
+		res.Message = ret.String()
+	}
+	out, err := json.Marshal(res)
 	w.Write(out)
 }
 func queryCC(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("================query cc======================")
+	log.Print("================query cc======================")
+	type response1 struct {
+		Success bool
+		Message string
+	}
+
 	ccp := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"))
 	cc, err := channel.New(ccp)
 	if err != nil {
-		log.Panicf("failed to create channel client: %s", err)
+		log.Panicf("failed to create channel client: %s", err.Error())
 	}
 	// new channel request for query
 	req := channel.Request{
@@ -276,26 +427,35 @@ func queryCC(w http.ResponseWriter, r *http.Request) {
 	}
 	// send request and handle response
 	reqPeers := channel.WithTargetEndpoints(peer0Org1)
-	fmt.Println("success to reqpeers")
 	response, err := cc.Query(req, reqPeers)
+
+	res := response1{
+		Success: true,
+		Message: "",
+	}
+
 	if err != nil {
-		fmt.Printf("failed to query chaincode: %s\n", err)
+		res.Message = err.Error()
+		res.Success = false
+	} else {
+		log.Printf("chaincode query success,the value is %s\n", string(response.Payload))
+		res.Message = string(response.Payload)
 	}
-	fmt.Println("success to query cc")
-	fmt.Println(string(response.Payload))
-	if len(response.Payload) > 0 {
-		fmt.Printf("chaincode query success,the value is %s\n", string(response.Payload))
-		w.Write(response.Payload)
-	}
+
+	out, err := json.Marshal(res)
+	w.Write(out)
 }
 
 func invokeCC(w http.ResponseWriter, r *http.Request) {
-	//args := packArgs([]string{"a", "b", "10"})
-	fmt.Println("=====================invoke chaincode====================")
+	log.Print("=====================invoke chaincode====================")
+	type response1 struct {
+		Success bool
+		Message string
+	}
 	ccp := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"))
 	cc, err := channel.New(ccp)
 	if err != nil {
-		log.Panicf("failed to create channel client: %s", err)
+		log.Panicf("failed to create channel client: %s", err.Error())
 	}
 
 	args := packArgs([]string{"1111111", "2222222", "33333333", "xxxx"})
@@ -307,11 +467,21 @@ func invokeCC(w http.ResponseWriter, r *http.Request) {
 	peers := []string{peer0Org1}
 	reqPeers := channel.WithTargetEndpoints(peers...)
 	response, err := cc.Execute(req, reqPeers)
-	if err != nil {
-		fmt.Printf("failed to Execute chaincode: %s\n", err)
+
+	res := response1{
+		Success: true,
+		Message: "",
 	}
-	fmt.Printf("Execute chaincode success,txId:%s\n", response.TransactionID)
-	out, err := json.Marshal(response)
+	if err != nil {
+		res.Success = false
+		res.Message = err.Error()
+		log.Printf("failed to Execute chaincode: %s\n", err.Error())
+	} else {
+		res.Message = string(response.TransactionID)
+	}
+	log.Printf("Execute chaincode success,txId:%s\n", response.TransactionID)
+
+	out, err := json.Marshal(res)
 	w.Write(out)
 }
 
@@ -322,14 +492,20 @@ func packArgs(paras []string) [][]byte {
 	}
 	return args
 }
-func InstallChainCode(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("================install cc======================")
 
+//InstallChainCode function
+func InstallChainCode(w http.ResponseWriter, r *http.Request) {
+	log.Print("================install cc======================")
+	//define response
+	type response struct {
+		Success bool
+		Message string
+	}
 	ccPkg, err := packager.NewCCPackage("sdk_test/src", "/root/gowork")
 	if err != nil {
-		log.Fatalf("pack chaincode error %s", err)
+		log.Fatalf("pack chaincode error %s", err.Error())
 	}
-	// new request of installing chaincode
+	// new request of installing chaincode.
 	req := resmgmt.InstallCCRequest{
 		Name:    "face",
 		Path:    "sdk_test/src",
@@ -339,7 +515,7 @@ func InstallChainCode(w http.ResponseWriter, r *http.Request) {
 
 	clientContext := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg("org2"))
 
-	// Resource management client is responsible for managing resources (joining channels, install/instantiate/upgrade chaincodes)
+	// Resource management client is responsible for managing resources (joining channels, install/instantiate/upgrade chaincodes).
 	resMgmtClient, err := resmgmt.New(clientContext)
 	if err != nil {
 		log.Fatalf("Failed to create new resource management client")
@@ -348,29 +524,27 @@ func InstallChainCode(w http.ResponseWriter, r *http.Request) {
 	reqPeers := resmgmt.WithTargetEndpoints("peer0.org2.example.com")
 	_, err = resMgmtClient.InstallCC(req, reqPeers)
 
-	str := ""
-	if err == nil {
-		str = "success to install cc"
-	} else {
-		str = err.Error()
+	res := response{
+		Success: true,
+		Message: "success to install chaincode",
+	}
+	if err != nil {
+		res.Message = err.Error()
+		res.Success = false
 	}
 
-	fmt.Println(str)
-	out, err := json.Marshal(str)
+	out, err := json.Marshal(res)
 	w.Write(out)
 }
 
+//InstantiateChainCode function
 func InstantiateChainCode(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("================instantiate cc======================")
-	// new request of Instantiate chaincode
-	/*type InstantiateCCRequest struct {
-		Name       string
-		Path       string
-		Version    string
-		Args       [][]byte
-		Policy     *common.SignaturePolicyEnvelope
-		CollConfig []*common.CollectionConfig
-	}*/
+	log.Print("================instantiate cc======================")
+	//define response
+	type response struct {
+		Success bool
+		Message string
+	}
 	ccPolicy := cauthdsl.SignedByMspMember("Org1MSP")
 
 	req := resmgmt.InstantiateCCRequest{
@@ -391,21 +565,22 @@ func InstantiateChainCode(w http.ResponseWriter, r *http.Request) {
 	reqPeers := resmgmt.WithTargetEndpoints("peer0.org1.example.com")
 	_, err = resMgmtClient.InstantiateCC("mychannel", req, reqPeers)
 
-	str := ""
-	if err == nil {
-		str = "success to instantiate cc"
-	} else {
-		str = err.Error()
+	res := response{
+		Success: true,
+		Message: "success to instantiate chaincode",
+	}
+	if err != nil {
+		res.Message = err.Error()
+		res.Success = false
 	}
 
-	fmt.Println(str)
-	out, err := json.Marshal(str)
+	out, err := json.Marshal(res)
 	w.Write(out)
 }
 
 func getChannels(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("================ GET CHANNELS ======================")
-	// define response
+	log.Print("================ GET CHANNELS ======================")
+
 	type response struct {
 		Success bool
 		Message string
@@ -414,51 +589,61 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 	resMgmtClient, err := resmgmt.New(clientContext)
 
 	if err != nil {
-		fmt.Println("Failed to create new resource management client: %s", err)
+		log.Fatalf("Failed to create new resource management client: %s", err.Error())
 	}
-
-	//var peers fabsdk.Peer
-	//peers.append(peers,peer())
-	//org1AdminClientContext := sdk.Context(fabsdk.WithUser("AdminOrg1"), fabsdk.WithOrg("Org1"))
-	//org1Peers, err := DiscoverLocalPeers(org1AdminClientContext, 2)
-
 	ret, err := resMgmtClient.QueryChannels(resmgmt.WithTargetEndpoints("peer0.org1.example.com"))
 
-	if err == nil {
-		fmt.Printf("GET BLOCK BY NUMBER sucess")
-		fmt.Println(ret)
-	}
-	/*res := response{
+	res := response{
 		Success: true,
-		Message: string(out[:]),
+		Message: "",
 	}
 
 	if err == nil {
-		fmt.Printf(out)
-	}*/
-	//ret, err := json.Marshal(res)
-	//w.Header().Set("Content-Type", "application/json")
-	out, err := json.Marshal(ret)
+		log.Print("================ GET CHANNELS SUCCESS ======================")
+		out, err1 := json.Marshal(ret)
+		if err1 == nil {
+			res.Message = string(out[:])
+		}
+	} else {
+		res.Success = false
+		res.Message = err.Error()
+	}
+	w.Header().Set("Content-Type", "application/json")
+	out, err := json.Marshal(res)
 	w.Write(out)
 }
 
 func getTransactionByID(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("================ GET TRANSACTION BY TRANSACTION_ID ======================")
+	log.Print("================ GET TRANSACTION BY TRANSACTION_ID ======================")
 
-	//clientContext := sdk.Context(fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(ordererOrgName))
-	//resMgmtClient, err := resmgmt.New(clientContext)
-	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"), fabsdk.WithOrg("Org1"))
+	vars := mux.Vars(r)
+
+	log.Print(orgName)
+	type response struct {
+		Success bool
+		Message string
+	}
+
+	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
 
 	client, err := ledger.New(channelContext)
 	if err != nil {
-		fmt.Println("Failed to create new channel client: %s", err)
+		log.Fatalf("Failed to create new channel client: %s", err.Error())
 	}
-	ret, err := client.QueryTransaction("")
+	res := response{
+		Success: true,
+		Message: "",
+	}
+	txid := vars["transactionID"]
+	log.Printf("txid:%s", txid)
+	ret, err := client.QueryTransaction(fab.TransactionID(txid))
 	if err != nil {
-		fmt.Println("Failed to queryTx : %s", err)
+		res.Success = false
+		res.Message = err.Error()
+		log.Printf("Failed to queryTx : %s", err.Error())
+	} else {
+		res.Message = ret.String()
 	}
-	fmt.Println("success to getTransactionByID:")
-	fmt.Println(ret)
-	out, err := json.Marshal(ret)
+	out, err := json.Marshal(res)
 	w.Write(out)
 }
