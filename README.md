@@ -11,7 +11,7 @@
 然后go run main.go 启动服务在端口4000，
 参照testAPI.sh中的curl命令使用。
 
-注意：命令复制出来记得把token变量删除，因为token目前无法使用
+注意：注册login后返回token，把这个token复制下来后续命令中替换token变量。
 
 由于该版本不太完善，我也会持续更新功能，如有使用问题也请反馈。
 
