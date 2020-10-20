@@ -13,7 +13,5 @@
 
 注意：注册login后返回token，把这个token复制下来后续命令中替换token变量。
 
-由于该版本不太完善，我也会持续更新功能，如有使用问题也请反馈。
-
 QQ：314588595
 微信：marschengshuangquan
