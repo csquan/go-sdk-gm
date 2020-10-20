@@ -129,7 +129,6 @@ func randomString(strlen int) string {
 
 func login(w http.ResponseWriter, r *http.Request) {
 	log.Print("==================== LOGIN ==================")
-	// define response
 	type response struct {
 		Success bool
 		Message string
@@ -149,8 +148,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 			"orgName":  orgName,
 			"exp":      time.Now().Unix() + 360000,
 		})
-		//tokenString, err := token.SignedString([]byte(secret))
-		_, err := token.SignedString([]byte(secret))
+		tokenString, err := token.SignedString([]byte(secret))
 		ctxProvider := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg("Org1"))
 		if ctxProvider == nil {
 			fmt.Println("failed to create ctxProvider")
@@ -162,11 +160,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		//signingIdentity, err := msp.GetSigningIdentity(userName)
-		_, err = msp.GetSigningIdentity("jim")
-		/*if err != ErrUserNotFound {
-			//t.Fatal("Expected to not find user")
-		}*/
+		_, err = msp.GetSigningIdentity(userName)
 		if err != nil {
 			log.Printf("Check if user %s is enrolled: %s", userName, err.Error())
 			testAttributes := []mspclient.Attribute{
@@ -181,7 +175,6 @@ func login(w http.ResponseWriter, r *http.Request) {
 					ECert: true,
 				},
 			}
-			fmt.Println("++++++++++++begin GetIdentity+++++++++++++")
 			// Register the new user
 			identity, _ := msp.GetIdentity(userName)
 			if true {
@@ -194,28 +187,24 @@ func login(w http.ResponseWriter, r *http.Request) {
 					Secret:      secret,
 				})
 			} else {
-				fmt.Println("++++++++++++err Identity+++++++++++++")
-				fmt.Println(identity)
-				//log.Printf("Identity: %s", identity.Secret)
+				log.Printf("Identity: %s", identity.Secret)
 			}
 			log.Printf("secret: %s ", secret)
 
 		}
-		/*fmt.Println("++++++++++++register in main success+++++++++++++")
-		//err = msp.Enroll(userName, mspclient.WithSecret("123"), mspclient.WithProfile("tls"))
+
+		log.Printf("++++++++++++register in main success+++++++++++++")
 		err = msp.Enroll(userName, mspclient.WithSecret("123"))
-		//_, err = msp.Register(&mspclient.RegistrationRequest{Name: "jim"})
-		fmt.Println("enroll err")
-		fmt.Println(err)
-		res := response{
-			Success: true,
-			Message: err.Error(),
+		res := response{                                                                                                                 Success: true,                                                                                                          Message: "success to enroll user",                                                                                           }
+		if err != nil{
+			log.Printf("enroll err：%s",err.Error())
+			res.Success = false
+			res.Message = err.Error()
 		}
-		//log.Printf("%s: %s", signingIdentity.Identifier().ID, string(signingIdentity.EnrollmentCertificate()[:]))
-		//res.Token = tokenString
+		res.Token = tokenString
 		out, err := json.Marshal(res)
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(out)*/
+		w.Write(out)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}
