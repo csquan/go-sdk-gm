@@ -40,10 +40,10 @@ function setChaincodePath(){
 	LANGUAGE=`echo "$LANGUAGE" | tr '[:upper:]' '[:lower:]'`
 	case "$LANGUAGE" in
 		"golang")
-		CC_SRC_PATH="github.com/example_cc"
+		CC_SRC_PATH="./src"
 		;;
 		"node")
-		CC_SRC_PATH="$PWD/artifacts/src/github.com/example_cc/node"
+		CC_SRC_PATH="./src"
 		;;
 		*) printf "\n ------ Language $LANGUAGE is not supported yet ------\n"$
 		exit 1
@@ -83,12 +83,11 @@ curl -s -X POST \
   -H "content-type: application/json" \
   -d '{
 	"name":"mychannel",
-	"path":"/root/gowork/src/github.com/balance-transfer-go/artifacts/channel/mychannel.tx",
+	"path":"/home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/channel.tx",
 	"org":"org1"
 }'
 echo
 echo
-sleep 5
 echo "POST request Join channel on Org1"
 echo
 curl -s -X POST \
@@ -100,7 +99,8 @@ curl -s -X POST \
 }'
 echo
 echo
-
+sleep 5
+echo
 echo "POST request Join channel on Org2"
 echo
 curl -s -X POST \
@@ -112,8 +112,7 @@ curl -s -X POST \
 }'
 echo
 echo
-
-
+sleep 5
 echo "POST Install chaincode on peer0.Org1"
 echo
 curl -s -X POST \
@@ -191,24 +190,8 @@ curl -s -X POST \
 	\"args\":[]
 }"
 echo
-
 sleep 5
-
-echo "POST invoke chaincode on peers of Org1 and Org2"
 echo
-curl -s -X POST \
-	  http://localhost:4000/channels/mychannel/invokechaincodes/face \
-	    -H "authorization:$ORG1_TOKEN" \
-	      -H "content-type: application/json" \
-	        -d "{
-        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
-	        \"fcn\":\"createFace\",
-		        \"args\":[\"1111111\",\"2222222\",\"33333333\",\"xxxx\"]
-		}"
-echo 
-echo
-
-
 echo "POST invoke chaincode on peers of Org1 and Org2"
 echo
 TX_INFO=$(curl -s -X POST \
@@ -221,8 +204,8 @@ TX_INFO=$(curl -s -X POST \
 	\"args\":[\"1111111\",\"2222222\",\"33333333\",\"xxxx\"]
 }")
 echo $TX_INFO
-echo
-TRX_ID=$(echo $TX_INFO | jq -r ".Proposal.TxnID")
+#echo
+#TRX_ID=$(echo $TX_INFO | jq -r ".Success")
 
 echo "GET query Block by blockNumber"
 echo
@@ -237,13 +220,13 @@ echo
 
 sleep 5
 
-echo "GET query Transaction by TransactionID"
-echo $TRX_ID
-curl -s -X GET http://localhost:4000/channels/mychannel/transactions/$TRX_ID?peer=peer0.org1.example.com \
-  -H "authorization:$ORG1_TOKEN" \
-  -H "content-type: application/json"
-echo
-echo
+#echo "GET query Transaction by TransactionID"
+#echo $TRX_ID
+#curl -s -X GET http://localhost:4000/channels/mychannel/transactions/$TRX_ID?peer=peer0.org1.example.com \
+#  -H "authorization:$ORG1_TOKEN" \
+#  -H "content-type: application/json"
+#echo
+#echo
 
 
 

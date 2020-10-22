@@ -50,6 +50,12 @@ func main() {
 	}
 	sdk = sdk1
 
+	storePath := "/tmp/examplestore"
+	err = os.RemoveAll(storePath)
+	if err != nil {
+		log.Fatalf("Cleaning up directory '%s' failed: %v", storePath, err)
+	}
+
 	r := mux.NewRouter()
 	r.HandleFunc("/users", login).Methods("POST")
 	r.Handle("/channels", authMiddleware(http.HandlerFunc(createChannel))).Methods("POST")
@@ -113,6 +119,7 @@ func randomString(strlen int) string {
 
 func login(w http.ResponseWriter, r *http.Request) {
 	log.Print("================== LOGIN ==================")
+
 	type response struct {
 		Success bool
 		Message string
@@ -123,30 +130,28 @@ func login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	userName := r.Form.Get("username")
-	orgName := r.Form.Get("orgName")
+	user := r.Form.Get("username")
+	org := r.Form.Get("orgName")
 	secret := r.Form.Get("secret")
-	if userName != "" && orgName != "" {
+	if user != "" && org != "" {
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"username": userName,
-			"orgName":  orgName,
+			"username": user,
+			"orgName":  org,
 			"exp":      time.Now().Unix() + 360000,
 		})
 		tokenString, err := token.SignedString([]byte(secret))
-		ctxProvider := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg(orgName))
+		ctxProvider := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg(org))
 		if ctxProvider == nil {
-			fmt.Println("failed to create ctxProvider")
-			return
+			log.Fatalf("failed to create ctxProvider")
 		}
 		msp, err := mspclient.New(ctxProvider)
 		if err != nil {
-			fmt.Println(err)
-			return
+			log.Fatal("failed to call new for create msp", err.Error())
 		}
 
-		_, err = msp.GetSigningIdentity(userName)
+		_, err = msp.GetSigningIdentity(user)
 		if err != nil {
-			log.Printf("Check if user %s is enrolled: %s", userName, err.Error())
+			log.Printf("Check if user %s is enrolled: %s", user, err.Error())
 			testAttributes := []mspclient.Attribute{
 				{
 					Name:  GenerateRandomID(),
@@ -160,14 +165,14 @@ func login(w http.ResponseWriter, r *http.Request) {
 				},
 			}
 			// Register the new user
-			identity, _ := msp.GetIdentity(userName)
+			identity, _ := msp.GetIdentity(user)
 			if true {
-				log.Printf("User %s does not exist, registering new user", userName)
+				log.Printf("User %s does not exist, registering new user", user)
 				_, err = msp.Register(&mspclient.RegistrationRequest{
-					Name:        userName,
-					Type:        orgName,
+					Name:        user,
+					Type:        org,
 					Attributes:  testAttributes,
-					Affiliation: orgName,
+					Affiliation: org,
 					Secret:      secret,
 				})
 			} else {
@@ -177,7 +182,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		err = msp.Enroll(userName, mspclient.WithSecret("123"))
+		err = msp.Enroll(user, mspclient.WithSecret("123"))
 		res := response{Success: true, Message: "success to enroll user"}
 		if err != nil {
 			log.Printf("enroll err：%s", err.Error())
@@ -201,11 +206,9 @@ func getChainInfo(w http.ResponseWriter, r *http.Request) {
 		Message string
 	}
 	vars := mux.Vars(r)
-	username := "Admin"
-	orgName := r.Header.Get("orgName")
-	log.Print(username)
-	log.Print(orgName)
-	channelContext := sdk.ChannelContext(vars["channelName"], fabsdk.WithUser(username), fabsdk.WithOrg(orgName))
+	user := "Admin"
+	org := r.Header.Get("orgName")
+	channelContext := sdk.ChannelContext(vars["channelName"], fabsdk.WithUser(user), fabsdk.WithOrg(org))
 	client, err := ledger.New(channelContext)
 	if err != nil {
 		log.Fatalf("Failed to create new ledger client: %s", err)
@@ -360,9 +363,8 @@ func joinChannel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Org peers join channel
-	if err = orgResMgmt.JoinChannel(channelID, resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com")); err != nil {
-		log.Panicf("Org peers failed to JoinChannel: %s", err.Error())
-	}
+	err = orgResMgmt.JoinChannel(channelID, resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com"));
+
 	res := response{
 		Success: true,
 		Message: "success to join channel",
@@ -477,7 +479,10 @@ func invokeCC(w http.ResponseWriter, r *http.Request) {
 		res.Message = err.Error()
 		log.Printf("failed to Execute chaincode: %s\n", err.Error())
 	} else {
-		res.Message = string(response.TransactionID)
+		out1, err1 := json.Marshal(response)
+		if err1 == nil {
+			res.Message = string(out1[:])
+		}
 	}
 	log.Printf("Execute chaincode success,txId:%s\n", response.TransactionID)
 
@@ -496,6 +501,25 @@ func packArgs(paras []string) [][]byte {
 //InstallChainCode function
 func InstallChainCode(w http.ResponseWriter, r *http.Request) {
 	log.Print("================install cc======================")
+	type installConfig struct {
+		Name    string
+		Path    string
+		Version string
+		Org     string
+		User    string
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	install := installConfig{}
+	decoder.Decode(&install)
+	log.Print(install)
+
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+	peer := r.Form.Get("peer")
+	log.Print(peer)
 	//define response
 	type response struct {
 		Success bool
@@ -513,7 +537,7 @@ func InstallChainCode(w http.ResponseWriter, r *http.Request) {
 		Package: ccPkg,
 	}
 
-	clientContext := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg("org2"))
+	clientContext := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg(install.Org))
 
 	// Resource management client is responsible for managing resources (joining channels, install/instantiate/upgrade chaincodes).
 	resMgmtClient, err := resmgmt.New(clientContext)
@@ -521,7 +545,7 @@ func InstallChainCode(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Failed to create new resource management client")
 	}
 
-	reqPeers := resmgmt.WithTargetEndpoints("peer0.org2.example.com")
+	reqPeers := resmgmt.WithTargetEndpoints(peer)
 	_, err = resMgmtClient.InstallCC(req, reqPeers)
 
 	res := response{
