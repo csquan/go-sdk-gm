@@ -15,3 +15,33 @@
 
 QQ：314588595
 微信：marschengshuangquan
+
+mysql -u root -p
+
+CREATE TABLE balance(`name`  varchar(20) not null,`sum` INT UNSIGNED, PRIMARY KEY (name)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO balance(name,sum) VALUES ("A",100 );
+
+
+查询：
+
+curl -s -X POST http://localhost:4000/channels/mychannel/invokechaincodes/example -H  "authorization:eyJhb
+GciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDU4ODQxMDIsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.LrFBpEb9ogWu2z8ZnWRsSTedIjwDAMc8ENOuD_BdcFo" -H "conte
+nt-type: application/json" -d "{
+ \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+ \"fcn\":\"query\",
+  \"args\":[\"a\"]
+ }"
+
+move交易：
+
+curl -s -X POST http://localhost:4000/channels/mychannel/invokechaincodes/example -H \
+"authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDU4ODQxMDIsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.LrFBpEb9ogWu2z8ZnWRsSTedIjwDAMc8ENOuD_BdcFo" -H "content-type: application/json"  \
+-d "{  
+ \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+ \"fcn\":\"move\",
+  \"args\":[\"a\",\"b\",\"1\"]
+ }"
+
+go操作mysql：
+https://www.cnblogs.com/kaichenkai/p/11140555.html
