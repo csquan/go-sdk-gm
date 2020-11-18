@@ -47,3 +47,12 @@ go操作mysql：
 https://www.cnblogs.com/kaichenkai/p/11140555.html
 
 https://www.cnblogs.com/mrhonest/p/10881646.html
+
+ipfs：
+curl -F "file=@./text.txt" 172.17.80.253:5001/api/v0/add
+
+返回：{"Name":"text.txt","Hash":"QmZAU2DRpNtU83LEnS3YUgmv1K1yCHCqFmyVTn6QqTJgUv","Size":"136915"}
+
+取出：
+
+curl -X POST http://172.17.80.253:5001/api/v0/cat?arg=QmZAU2DRpNtU83LEnS3YUgmv1K1yCHCqFmyVTn6QqTJgUv >>./download.txt
