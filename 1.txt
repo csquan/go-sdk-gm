@@ -1,0 +1,174 @@
+personalRegister:
+
+curl -s -X POST \										 
+  httl://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxMzczMzMsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.yLpiiJIvZ7VgL7AMHCwbt-v6DEryju5Radoufxpg8Zk" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"PersonalRegister\",
+        \"args\":[\"orderid001\",\"user001\",\"secoouserxxx\",\"13588888888\",\"0\",\"0\",\"CertNo001\",\"xxx@163.com\",\"remark\",\"acctno001\",\"merchaintid001\",\"2020-11-18\",\"2020-11-19\"]}"
+
+
+PublicUserRegister:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"PubilcUserRegister\",
+        \"args\":[\"orderid001\",\"Publicuser001\",\"secoo.cop\",\"13588888888\",\"role\",\"0\",\"BusinessLicense001\",\"xxx@163.com\",\"remark\",\"acctno001\",\"merchaintid001\",\"2020-11-18\",\"2020-11-19\",\"onbusiness\"]}"
+
+AccountRelation:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"AccountRelation\",
+        \"args\":[\"masteroutuserid001\",\"mastervaccno001\",\"masternamexxx\",\"outuserid001\",\"vaccno001\",\"namexxx\",\"mobilexxxxxxxxxx\",\"xxx@163.com\",\"merchantid001\",\"2020-11-18\",\"2020-11-19\"]}"
+
+MemberAccountBind:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"MemberAccountBind\",
+        \"args\":[\"merchantid001\",\"outuser001\",\"0\",\"bankaccount001\",\"phonexxxxxxxxxx\",\"certno001\",\"2020-11-18\",\"2020-11-19\",\"0\",\"realnamexxx\",\"remarkxxx\",\"outorderid001\",\"vacctno001\",\"0\",\"AccountAttrxxx\",\"BankAccountName001\",\"banknamexx\",\"bankbranchname\",\"flage\",\"Issuerxx\",\"OutSeqno001\",\"0\",\"channel001\",\"0\",\"onbusiness\",\"FrontSeqno001\"]}"
+
+Loan:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"Loan\",
+        \"args\":[\"TradeType001\",\"PayUserID001\",\"DebitAccountNo001\",\"ReceiveUserID001\",\"ReceiveUserAccountNo001\",\"amountxxx\",\"0\",\"FeeAmount100\",\"currencyRMB\",\"outorderid001\",\"summaryxxx\",\"Remark1xxx\",\"Remarkxxx\",\"MerchantID001\",\"OutBatchID001\",\"0\",\"2020-11-18\",\"2020-11-19\",\"DelFlag1\",\"Status01\",\"Reasonxxx\",\"RespCodexxx\",\"RespMsgxxx\",\"ProvisionsAccountNo001\",\"PayerAccountNamexxx\",\"PayeeAccountName\",\"OutSeqno001\",\"TransType\",\"FrontSeqNo001\",\"ReturnOutSeqno001\",\"WithdrawOutSeqno001\",\"ReturnCreationTimexxx\",\"OrigOutOrderID\"]}"
+
+CancleLoan:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"CancleLoan\",
+        \"args\":[\"cancelMerchantID001\",\"cancelOutOrderID001\",\"cancelOldOutOrderID\",\"OldPayUserID\",\"OldPayerAccountNo001\",\"OldReceiveUserID009\",\"OldPayeeAccountNo009\",\"cancelAmount100\",\"cancelFeeAmount1\",\"2020-11-18\",\"2020-11-19\",\"cancleremark\",\"0\",\"1\",\"OutSeqno001\",\"FrontSeqNo001\",\"RespCodexxx\",\"RespMsgxxx\"]}"
+
+AccountTransfer:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"AccountTransfer\",
+        \"args\":[\"AccountTransferTradeType1\",\"AccountTransferPayUserID001\",\"AccountTransferDebitAccountNo001\",\"AccountTransferReceiveUserID001\",\"ReceiveUserAccountNo\",\"AccountTransferAmount100\",\"FeeType1\",\"Feeamount1\",\"currencyrmb\",\"OutOrderID\",\"Summary\",\"remark1\",\"remark\",\"merchantID\",\"OutBatchID\",\"BizType\",\"2020-11-18\",\"2020-11-19\",\"DelFlag\",\"0\",\"Reason\",\"RespCodexxx\",\"RespMsgxxx\",\"ProvisionsAccountNo\",\"PayerAccountName\",\"PayeeAccountName\",\"AccountTrasnsferOutSeqno001\",\"AccountTransferTransType1\",\"AccountTransferFrontSeqNo001\",\"AccountTransferReturnOutSeqno100\",\"WithdrawOutSeqno1\",\"ReturnCreationTime\",\"OrigOutOrderID\",\"MessageOrderNo1\",\"MessageCheckCode\"]}"
+
+OnAccount:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"OnAccount\",
+        \"args\":[\"OnAccountMerchantID\",\"OnAccountOutOrderID\",\"OnAccountOutUserID\",\"OnAccountAmount\",\"FeeAmount\",\"Remark\",\"Status\",\"FrontSeqNo\",\"OnAccountOutSeqno\",\"OnAccountTradeType\",\"2020-11-18\",\"2020-11-19\"]}"
+
+OnAccountCancel:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"OnAccountCancel\",
+        \"args\":[\"OnAccountCancelMerchantID\",\"OnAccountCancelOutOrderID\",\"OnAccountCancelOrigOutOrderID\",\"OnAccountCancelOutUserID001\",\"OnAccountCancelAmount\",\"FeeAmount\",\"Remark\",\"Status\",\"CancelFrontSeqNo\",\"OnAccountCancelOutSeqno\",\"OnAccountCancelTradeType\",\"2020-11-18\",\"2020-11-19\"]}"
+
+
+LedgerSplit:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"LedgerSplit\",
+        \"args\":[\"LedgerSplitMerchantID\",\"LedgerSplitOutBatchID\",\"LedgerSplitPayUserID\",\"callbackurl\",\"2020-11-18\",\"2020-11-19\",\"Remark\",\"DelFalg\",\"LedgerSplitStatus\",\"LedgerSplitrespcode\",\"respmsg\",\"count\",\"LedgerSplitOutSeqNo\",\"DebitAccountNo\",\"PayerAccountName\",\"OrigOutOrderID\",\"PayType\",\"PayMerchantID\",\"TotalAmount\",\"TotalOrderID\",\"DetailList\"]}"
+
+LedgerCancelSplit:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"LedgerCancelSplit\",
+        \"args\":[\"LedgercancelSplitMerchantID\",\"LedgercancelSplitoigtotalorderID\",\"LedgercancelSplitoutorderid\",\"ReceiveUserID\",\"amount\",\"2020-11-18\",\"2020-11-19\",\"Remark\",\"DelFalg\",\"LedgercancelSplitStatus\",\"ReceiveUserAccountNo\",\"cancelsplitUserSeqNo\",\"cancelsplitPayType\",\"cancelsplitfrontSeqNo\",\"respCode\",\"RespMsg\",\"OrigOutOrderID\"]}"
+
+FrozenUserFund:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"FrozenUserFund\",
+        \"args\":[\"FrozenMerchantID\",\"FrozenOutorderID\",\"Frozenoutuserid\",\"Amount100\",\"2020-11-18\",\"2020-11-19\",\"Remark\",\"DelFalg\",\"Status\",\"respCode\",\"RespMsg\",\"vaccNo\",\"FrozenSummary\",\"FrozenCurrency\",\"feeamount\",\"remark1\",\"FrozenOutSeqNo1\",\"FrozenFrontSeqNo\",\"FrozenFunctionFlag\"]}"
+
+
+UnFrozenUserFund:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"UnFrozenUserFund\",
+        \"args\":[\"UnFrozenMerchantID\",\"UnFrozenOutorderID\",\"UnFrozenoutuserid\",\"UnFrozenOrigOutOrderID\",\"Amount100\",\"2020-11-18\",\"2020-11-19\",\"Remark\",\"DelFalg\",\"Status\",\"respCode\",\"RespMsg\",\"vaccNo\",\"UnFrozenSummary\",\"UnFrozenCurrency\",\"Unfeeamount\",\"remark1\",\"UnFrozenOutSeqNo1\",\"UnFrozenFrontSeqNo\",\"UnFrozenFunctionFlag\"]}"
+
+WithdrawFund:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"WithdrawFund\",
+        \"args\":[\"WithdrawMerchantID\",\"WithdrawOutorderID\",\"WithdrawBindCardID\",\"WithdrawOutuserID\",\"Amount100\",\"callback\",\"remark\",\"WithdrawFrontSeqNo\",\"WithdrawOutSeqNo\",\"2020-11-18\",\"DebitAccountNo\",\"Status\",\"respCode\",\"RespMsg\",\"memo\",\"FeeAmount\",\"balance\"]}"
+
+
+queryInfo:
+
+1.base on key:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"queryInfo\",
+        \"args\":[\"$key\"]}"
+
+2. base on txid
+
+curl -s -X GET http://localhost:4000/channels/mychannel/transactions/1001a8ff00a8f5e68e3d6840db55275e1396b9c01289d1c6f909f6ff9e8590a4?peer=peer0.org1.example.com -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" -H "content-type: application/json"
