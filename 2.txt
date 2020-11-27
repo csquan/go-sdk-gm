@@ -1,0 +1,143 @@
+PersonalSync:
+
+curl -s -X POST http://localhost:4000/channels/mychannel/invokechaincodes/yilian -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDY1NDMzNTYsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.JqD5uRdn0fqxavIXXTDosklWtNEP7qdKf7JBTCTtIkU" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"PersonalSync\",
+        \"args\":[\"merchantID001\",\"PersonalSyncOutOrderID001\",\"PersonalSyncOutUserID001\",\"regionCode\",\"1555555555\",\"remark\",\"UserBizType\",\"2020-11-18\",\"2020-11-19\",\"1\",\"0\",\"2020-11-18\",\"secoo\",\"1\",\"101\",\"010xxxxxxxxxxxxxxxx\",\"2019-09-18\",\"2049-09-18\",\"xxx@163.com\",\"xxxxxxxxx\",\"100000\",\"111\",\"xxxxxxxxx\",\"boss\",\"1\",\"5555555\",\"xxxxx\",\"xxxx\",\"0\",\"xxx\",\"xianfengzhifu\",\"0\",\"135555555\",\"134444444\",\"2\",\"1\",\"0\",\"CHN\",\"xxxx\"]}"
+
+
+PublicSync:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/yilian \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDY1NDMzNTYsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.JqD5uRdn0fqxavIXXTDosklWtNEP7qdKf7JBTCTtIkU" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"PublicSync\",
+        \"args\":[\"PublicSync-merchantID1\",\"1\",\"PublicSync-OutUserId1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\"]}"
+
+MemberAccountBind:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/yilian \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDY1NDMzNTYsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.JqD5uRdn0fqxavIXXTDosklWtNEP7qdKf7JBTCTtIkU" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"MemberAccountBind\",
+        \"args\":[\"merchantid001\",\"MemberAccountBind-outuser001\",\"0\",\"bankaccount001\",\"phonexxxxxxxxxx\",\"certno001\",\"2020-11-18\",\"2020-11-19\",\"0\",\"realnamexxx\",\"remarkxxx\",\"outorderid001\",\"vacctno001\",\"0\",\"AccountAttrxxx\",\"BankAccountName001\",\"banknamexx\",\"bankbranchname\",\"flage\",\"Issuerxx\",\"MemberAccountBind-OutSeqno001\",\"0\",\"channel001\",\"0\",\"onbusiness\"]}"
+
+ConfirmComsum:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/yilian \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDY1NDMzNTYsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.JqD5uRdn0fqxavIXXTDosklWtNEP7qdKf7JBTCTtIkU" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"ConfirmComsum\",
+        \"args\":[\"merchantid001\",\"ConfirmComsum-outuser001\",\"0\",\"bankaccount001\",\"phonexxxxxxxxxx\",\"certno001\",\"2020-11-18\",\"2020-11-19\",\"0\",\"realnamexxx\",\"remarkxxx\",\"outorderid001\",\"ConfirmComsum-ourseqID\",\"0\"]}"
+
+
+CancelConsum:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/yilian \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDY1NDMzNTYsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.JqD5uRdn0fqxavIXXTDosklWtNEP7qdKf7JBTCTtIkU" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"CancelConsum\",
+        \"args\":[\"merchantid001\",\"CancelComsum-outuser001\",\"CancelComsum-outorderID\",\"bankaccount001\",\"phonexxxxxxxxxx\",\"certno001\",\"2020-11-18\",\"2020-11-19\",\"0\",\"realnamexxx\",\"remarkxxx\",\"outorderid001\",\"ConfirmComsum-ourseqID\",\"0\",\"0\",\"CancelComsum-outseqNo0\"]}"
+
+
+Loan:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/yilian \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDY1NDMzNTYsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.JqD5uRdn0fqxavIXXTDosklWtNEP7qdKf7JBTCTtIkU" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"Loan\",
+        \"args\":[\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"loan-1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"loan-outseqno001\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\"]}"
+
+
+BenefitSplit:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/yilian \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDY1NDMzNTYsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.JqD5uRdn0fqxavIXXTDosklWtNEP7qdKf7JBTCTtIkU" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"BenefitSplit\",
+        \"args\":[\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"benefit-1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"benefit-outseqno001\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\"]}"
+
+
+LedgerAccountSplit:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/yilian \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDY1NDMzNTYsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.JqD5uRdn0fqxavIXXTDosklWtNEP7qdKf7JBTCTtIkU" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"LedgerAccountSplit\",
+        \"args\":[\"1\",\"LedgerAccountSplit-OutBatchID001\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"LedgerAccountSplit-outSeqNo001\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"totalOrderId-1\",\"detaillist\"]}"
+
+
+PlatformTransfer:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/yilian \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDY3MTQ1OTIsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.5ZYb0sxqbqnDdxlOzD4Jsd98FAXpezjEbYIAM1KhTyU" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"PlatformTransfer\",
+        \"args\":[\"1\",\"PlatformTransfer-OutOrderID001\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"PlatformTransfer-OutSeqNo001\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\"]}"
+
+PlatformRefund:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/yilian \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDY3MzU2MzcsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0yNiJ9.OylYE-98-xB4JHz0SVg6Iu-bPNNh_AEZyB0eEkf2NcM" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"PlatformRefund\",
+        \"args\":[\"PlatformRefund-2\",\"1\",\"PlatformRefund-002\",\"PlatformRefund-1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\"]}"
+
+WithdrawFund:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/yilian \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDY3MzU2MzcsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0yNiJ9.OylYE-98-xB4JHz0SVg6Iu-bPNNh_AEZyB0eEkf2NcM" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"WithdrawFund\",
+        \"args\":[\"1\",\"withdraw-01\",\"1\",\"1\",\"1\",\"1\",\"1\",\"withdrawseq1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\"]}"
+
+
+
+queryInfo:
+
+1.base on key:
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/yilian \
+  -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" \
+  -H "content-type: application/json" \
+  -d "{
+        \"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+        \"fcn\":\"queryInfo\",
+        \"args\":[\"$key\"]}"
+
+2. base on txid
+
+curl -s -X GET http://localhost:4000/channels/mychannel/transactions/1001a8ff00a8f5e68e3d6840db55275e1396b9c01289d1c6f909f6ff9e8590a4?peer=peer0.org1.example.com -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" -H "content-type: application/json"
