@@ -24,9 +24,10 @@ client:
   # defined under "organizations"
   organization: Org1
   logging:
-    # Develope can using debug to get more information
+    # Develdebug 
+    # can using debug to get more information
     #    level: debug
-    level: debug
+    level: info
   cryptoconfig:
     path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config
   # Some SDKs support pluggable KV stores, the properties under "credentialStore"
@@ -35,26 +36,20 @@ client:
     # [Optional]. Used by user store. Not needed if all credentials are embedded in configuration
     # and enrollments are performed elswhere.
     path: "/tmp/examplestore"
+    cryptoStore:
+                  # Specific to the underlying KeyValueStore that backs the crypto key store.
+      path: "/tmp/hfc-msp"
 
 
-  # [Optional] BCCSP config for the client. Used by GO SDK.
-  #BCCSP:
-  #security:
-  #  enabled: true
-  #  default:
-  #    provider: "GM"
-  #  hashAlgorithm: "GMSM3"
-  #  softVerify: true
-  #  level: 256
 
   tlsCerts:
     # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
-    systemCertPool: ture
+    systemCertPool: false
     # [Optional]. Client key and cert for TLS handshake with peers and orderers
-    client:
+    #client:
       # 使用byfn中User1@org1的证书
-      keyfile: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/tls/client.key
-      certfile: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/tls/client.cert
+      # keyfile: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/tls/client.key
+      #certfile: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/tls/client.cert
 
 
 
@@ -80,10 +75,10 @@ channels:
     # 不要缺少当前channel的orderer节点
     orderers:
       - orderer.example.com
-      - orderer2.example.com
-      - orderer3.example.com
-      - orderer4.example.com
-      - orderer5.example.com
+        #- orderer2.example.com
+        #- orderer3.example.com
+        #- orderer4.example.com
+        #- orderer5.example.com
 
     # Required. list of peers from participating orgs
     peers:
@@ -138,7 +133,7 @@ channels:
         #[Optional] retry options for query config block
         retryOpts:
           #[Optional] number of retry attempts
-          attempts: 5
+          attempts: 1
           #[Optional] the back off interval for the first retry attempt
           initialBackoff: 500ms
           #[Optional] the maximum back off interval for any retry attempt
@@ -153,6 +148,33 @@ organizations:
   Org1:
     mspid: Org1MSP
     # set msp files path
+    users:
+      AdminOrg1:
+        key:
+          pem: |
+            -----BEGIN PRIVATE KEY-----
+            MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQg53vQXPDP1d4UlqEw
+            6D2DVtXN+vPuHXe45bh0X318t2qgCgYIKoEcz1UBgi2hRANCAATgtIDuaI93FTtz
+            dOuaNlDHl1+P0VP2iyGPPU2yu6eUhe0DYsCHynBr+4t8CgHBrSSpNGFxGJ+NRILg
+            Wxxp7O9d
+            -----END PRIVATE KEY-----
+        cert:
+          pem: |
+            -----BEGIN CERTIFICATE-----
+            MIICKjCCAdGgAwIBAgIRANfAEcfRYvyhk4LaydqxiAgwCgYIKoEcz1UBg3UwczEL
+            MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+            cmFuY2lzY28xGTAXBgNVBAoTEG9yZzEuZXhhbXBsZS5jb20xHDAaBgNVBAMTE2Nh
+            Lm9yZzEuZXhhbXBsZS5jb20wHhcNMjAxMDEyMDM0MTAwWhcNMzAxMDEwMDM0MTAw
+            WjBsMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMN
+            U2FuIEZyYW5jaXNjbzEPMA0GA1UECxMGY2xpZW50MR8wHQYDVQQDDBZBZG1pbkBv
+            cmcxLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAE4LSA7miP
+            dxU7c3TrmjZQx5dfj9FT9oshjz1NsrunlIXtA2LAh8pwa/uLfAoBwa0kqTRhcRif
+            jUSC4FscaezvXaNNMEswDgYDVR0PAQH/BAQDAgeAMAwGA1UdEwEB/wQCMAAwKwYD
+            VR0jBCQwIoAgg+TxiiUUP+uIGzxOER5nGCsc4fsDoa3UMzwFsSuPEhkwCgYIKoEc
+            z1UBg3UDRwAwRAIgANSk2LZa5ZZuvNK6xscr4cqethtKB6mjMz2+XmXXg74CIDeK
+            V3rcYdfxL475qPnMT3VkUGfVJersbm3zJlIWtpVP
+            -----END CERTIFICATE-----
+                
     cryptoPath: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
 
     # Add peers for org1
@@ -169,6 +191,33 @@ organizations:
   # fabric-ca registrar enroll ID and secret, etc.
   Org2:
     mspid: Org2MSP
+    users:
+      AdminOrg1:
+        key:
+          pem: |
+            -----BEGIN PRIVATE KEY-----
+            MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQg/8DEyoNek7Mfg57J
+            +qKg+kOS1npjAwIA8eal978uSDKgCgYIKoEcz1UBgi2hRANCAAQdF6Ncm5EBsFVQ
+            hbK9fmCLOwYvJ62OQO/aELPzXtFMM+N410MdTMZBGh8z61v7Xv5D1foWKGl9Nq2q
+            JNEIj1Fc
+            -----END PRIVATE KEY----- 
+        cert:
+          pem: |
+            -----BEGIN CERTIFICATE-----
+            MIICLDCCAdGgAwIBAgIRAP5wlmG115N37bn5FcX6VD4wCgYIKoEcz1UBg3UwczEL
+            MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+            cmFuY2lzY28xGTAXBgNVBAoTEG9yZzIuZXhhbXBsZS5jb20xHDAaBgNVBAMTE2Nh
+            Lm9yZzIuZXhhbXBsZS5jb20wHhcNMjAxMDEyMDM0MTAwWhcNMzAxMDEwMDM0MTAw
+            WjBsMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMN
+            U2FuIEZyYW5jaXNjbzEPMA0GA1UECxMGY2xpZW50MR8wHQYDVQQDDBZBZG1pbkBv
+            cmcyLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEHRejXJuR
+            AbBVUIWyvX5gizsGLyetjkDv2hCz817RTDPjeNdDHUzGQRofM+tb+17+Q9X6Fihp
+            fTatqiTRCI9RXKNNMEswDgYDVR0PAQH/BAQDAgeAMAwGA1UdEwEB/wQCMAAwKwYD
+            VR0jBCQwIoAgduNb6A05W24TykznwGHa6XqUvI+R8vXwMz5hiIyYSzYwCgYIKoEc
+            z1UBg3UDSQAwRgIhAIk1OxWW+SFCg7txPAMZbhdLE7brOgk+urnlFtgYblF4AiEA
+            89TVIwsXrEDF59H/4fs7LBlU9YNyBA+UnDbOGay/oJ8=
+            -----END CERTIFICATE-----
+
     cryptoPath: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp
 
     # Add peers for org2
@@ -194,7 +243,7 @@ organizations:
 orderers:
   orderer.example.com:
     # [Optional] Default: Infer from hostname
-    url: localhost:7050
+    url: grpcs://orderer.example.com:7050
 
     # these are standard properties defined by the gRPC library
     # they will be passed in as-is to gRPC client constructor
@@ -214,7 +263,7 @@ orderers:
       path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
   
   orderer2.example.com:
-    url: orderer2.example.com:8050
+    url: grpcs://orderer2.example.com:8050
 
     # these are standard properties defined by the gRPC library
     # they will be passed in as-is to gRPC client constructor
@@ -235,7 +284,7 @@ orderers:
       path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
 
   orderer3.example.com:
-    url: orderer3.example.com:9050
+    url: grpcs://orderer3.example.com:9050
 
     # these are standard properties defined by the gRPC library
     # they will be passed in as-is to gRPC client constructor
@@ -256,7 +305,7 @@ orderers:
        path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
   
   orderer4.example.com:
-    url: orderer4.example.com:10050
+    grpcs://url: orderer4.example.com:10050
 
     # these are standard properties defined by the gRPC library
     # they will be passed in as-is to gRPC client constructor
@@ -277,7 +326,7 @@ orderers:
        path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
   
   orderer5.example.com:
-    url: orderer5.example.com:11050
+    url: grpcs://orderer5.example.com:11050
 
     # these are standard properties defined by the gRPC library
     # they will be passed in as-is to gRPC client constructor
@@ -307,7 +356,7 @@ peers:
     # [Optional] Default: Infer from hostname
     # 表明使用grpcs协议，设置IP和端口号，使用域名会无法连接
     # url: grpcs://peer0.org1.example.com:7051
-    url: 127.0.0.1:7051
+    url: grpcs://127.0.0.1:7051
 
     grpcOptions:
       ssl-target-name-override: peer0.org1.example.com
@@ -321,14 +370,13 @@ peers:
 
     tlsCACerts:
       # Certificate location absolute path
-      path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
-      #path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+      #path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
+      path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
   peer1.org1.example.com:
     # this URL is used to send endorsement and query requests
     # [Optional] Default: Infer from hostname
     # 表明使用grpcs协议，设置IP和端口号，使用域名会无法连接
-    # url: grpcs://peer0.org1.example.com:7051
-    url: 127.0.0.1:8051
+    url: grpcs://127.0.0.1:8051
     grpcOptions:
       ssl-target-name-override: peer1.org1.example.com
       keep-alive-time: 0s
@@ -341,11 +389,11 @@ peers:
 
     tlsCACerts:
       # Certificate location absolute path
-      path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
-
+      #path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
+      path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/ca.crt
   peer0.org2.example.com:
     # Replace the port
-    url: localhost:9051
+    url: grpcs://peer0.org2.example.com:9051
     grpcOptions:
       ssl-target-name-override: peer0.org2.example.com
       keep-alive-time: 0s
@@ -356,11 +404,11 @@ peers:
       #will be taken into consideration if address has no protocol defined, if true then grpc or else grpcs
       allow-insecure: false
     tlsCACerts:
-      path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org2.example.com/tlsca/tlsca.org2.example.com-cert.pem
-
+            #path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org2.example.com/tlsca/tlsca.org2.example.com-cert.pem
+      path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
   peer1.org2.example.com:
     # Replace the port
-    url: localhost:10051
+    url: grpcs://peer1.org2.example.com:10051
     grpcOptions:
       ssl-target-name-override: peer1.org2.example.com
       keep-alive-time: 0s
@@ -371,8 +419,8 @@ peers:
       #will be taken into consideration if address has no protocol defined, if true then grpc or else grpcs
       allow-insecure: false
     tlsCACerts:
-      path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org2.example.com/tlsca/tlsca.org2.example.com-cert.pem
-
+            #path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org2.example.com/tlsca/tlsca.org2.example.com-cert.pem
+      path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/ca.crt
       #
 # Fabric-CA is a special kind of Certificate Authority provided by Hyperledger Fabric which allows
 # certificate management to be done via REST APIs. Application may choose to use a standard
@@ -380,7 +428,7 @@ peers:
 #
 certificateAuthorities:
   ca-org1:
-    url: https://ca.org1.example.com:7054
+    url: http://ca.org1.example.com:7054
     httpOptions:
       verify: false
     tlsCACerts:
@@ -396,7 +444,7 @@ certificateAuthorities:
     # [Optional] The optional name of the CA.
     caName: ca-org1 
   ca-org2:
-    url: https://ca.org2.example.com:8054
+    url: http://ca.org2.example.com:8054
     httpOptions:
       verify: false
     tlsCACerts:

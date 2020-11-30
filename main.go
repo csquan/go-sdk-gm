@@ -57,11 +57,12 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/users", login).Methods("POST")
+	r.HandleFunc("/users", login).Methods("GET")
 	r.Handle("/channels", authMiddleware(http.HandlerFunc(createChannel))).Methods("POST")
 	r.Handle("/channels/{channelName}/peers", authMiddleware(http.HandlerFunc(joinChannel))).Methods("POST")
 	r.Handle("/channels/{channelName}/installchaincodes", authMiddleware(http.HandlerFunc(InstallChainCode))).Methods("POST")
 	r.Handle("/channels/{channelName}/instantiatechaincodes", authMiddleware(http.HandlerFunc(InstantiateChainCode))).Methods("POST")
+	r.Handle("/channels/{channelName}/upgradechaincodes", authMiddleware(http.HandlerFunc(UpgradeChainCode))).Methods("POST")
 	r.Handle("/channels/{channelName}/chaincodes/{chaincodeName}", authMiddleware(http.HandlerFunc(queryCC))).Methods("GET")
 	r.Handle("/channels/{channelName}/invokechaincodes/{chaincodeName}", authMiddleware(http.HandlerFunc(invokeCC))).Methods("POST")
 	r.Handle("/channels/{channelName}/blocks/{blockID}", authMiddleware(http.HandlerFunc(getBlockByNumber))).Methods("GET")
@@ -133,6 +134,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	user := r.Form.Get("username")
 	org := r.Form.Get("orgName")
 	secret := r.Form.Get("secret")
+	log.Print(r)
 	if user != "" && org != "" {
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"username": user,
@@ -181,7 +183,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 			log.Printf("secret: %s ", secret)
 
 		}
-
+		log.Print("====================user==================")
+		log.Print(user)
 		err = msp.Enroll(user, mspclient.WithSecret("123"))
 		res := response{Success: true, Message: "success to enroll user"}
 		if err != nil {
@@ -404,6 +407,7 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 		log.Panicf("QueryConfigBlockFromOrderer return error: %s", err.Error())
 	} else {
 		log.Print("====getBlockByNumber success=============")
+		log.Print(ret)
 		res.Message = ret.String()
 	}
 	out, err := json.Marshal(res)
@@ -453,17 +457,33 @@ func invokeCC(w http.ResponseWriter, r *http.Request) {
 	type response1 struct {
 		Success bool
 		Message string
+		TxID    string
 	}
+
+	type invokeConfig struct {
+		Peers  []string
+		Fcn    string
+		Args   []string
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	invoke := invokeConfig{}
+	decoder.Decode(&invoke)
+
+	vars := mux.Vars(r)
+
 	ccp := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"))
 	cc, err := channel.New(ccp)
 	if err != nil {
 		log.Panicf("failed to create channel client: %s", err.Error())
 	}
 
-	args := packArgs([]string{"1111111", "2222222", "33333333", "xxxx"})
+	args := packArgs(invoke.Args)
+
+
 	req := channel.Request{
-		ChaincodeID: "face",
-		Fcn:         "createFace",
+		ChaincodeID: vars["chaincodeName"],
+		Fcn:         invoke.Fcn,
 		Args:        args,
 	}
 	peers := []string{peer0Org1}
@@ -473,22 +493,25 @@ func invokeCC(w http.ResponseWriter, r *http.Request) {
 	res := response1{
 		Success: true,
 		Message: "",
+		TxID:"",
 	}
 	if err != nil {
 		res.Success = false
 		res.Message = err.Error()
 		log.Printf("failed to Execute chaincode: %s\n", err.Error())
 	} else {
-		out1, err1 := json.Marshal(response)
-		if err1 == nil {
-			res.Message = string(out1[:])
-		}
+		log.Print("+++++++++++++++response++++++++++++++")
+		log.Print(string(response.Payload))
+		res.Message = string(response.Payload)
+		res.TxID = string(response.TransactionID)
 	}
 	log.Printf("Execute chaincode success,txId:%s\n", response.TransactionID)
-
+	fmt.Println(res)
 	out, err := json.Marshal(res)
 	w.Write(out)
 }
+
+
 
 func packArgs(paras []string) [][]byte {
 	var args [][]byte
@@ -525,15 +548,15 @@ func InstallChainCode(w http.ResponseWriter, r *http.Request) {
 		Success bool
 		Message string
 	}
-	ccPkg, err := packager.NewCCPackage("sdk_test/src", "/root/gowork")
+	ccPkg, err := packager.NewCCPackage(install.Path, "/root/gowork")
 	if err != nil {
 		log.Fatalf("pack chaincode error %s", err.Error())
 	}
 	// new request of installing chaincode.
 	req := resmgmt.InstallCCRequest{
-		Name:    "face",
-		Path:    "sdk_test/src",
-		Version: "v0",
+		Name:    install.Name,
+		Path:    install.Path,
+		Version: install.Version,
 		Package: ccPkg,
 	}
 
@@ -569,13 +592,34 @@ func InstantiateChainCode(w http.ResponseWriter, r *http.Request) {
 		Success bool
 		Message string
 	}
+
+	type instantiateConfig struct {
+		Name    string
+		Version string
+		Path    string
+		Args    []string
+	}
+
+	log.Print("++++instantiate r.Body+++")
+	log.Print(r.Body)
+
+	decoder := json.NewDecoder(r.Body)
+	instantiate := instantiateConfig{}
+	decoder.Decode(&instantiate)
+
+	log.Print("++++instantiate+++")
+	log.Print(instantiate)
+
 	ccPolicy := cauthdsl.SignedByMspMember("Org1MSP")
 
+	args := packArgs(instantiate.Args)
+
 	req := resmgmt.InstantiateCCRequest{
-		Name:    "face",
-		Path:    "sdk_test/src",
-		Version: "v0",
+		Name:    instantiate.Name,
+		Path:    instantiate.Path,
+		Version: instantiate.Version,
 		Policy:  ccPolicy,
+		Args:    args,
 	}
 
 	clientContext := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg("org1"))
@@ -601,6 +645,64 @@ func InstantiateChainCode(w http.ResponseWriter, r *http.Request) {
 	out, err := json.Marshal(res)
 	w.Write(out)
 }
+
+//UpgradeChainCode function
+func UpgradeChainCode(w http.ResponseWriter, r *http.Request) {
+	log.Print("================Upgrade cc======================")
+	//define response
+	type response struct {
+		Success bool
+		Message string
+	}
+
+	type upgradeConfig struct {
+		Name    string
+		Version string
+		Path    string
+		Args    string
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	upgrade := upgradeConfig{}
+	decoder.Decode(&upgrade)
+
+	log.Print("++++instantiate+++")
+	log.Print(upgrade)
+
+	ccPolicy := cauthdsl.SignedByMspMember("Org1MSP")
+
+
+	req := resmgmt.UpgradeCCRequest{
+		Name:    upgrade.Name,
+		Path:    upgrade.Path,
+		Version: upgrade.Version,
+		Policy:  ccPolicy,
+	}
+
+	clientContext := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg("org1"))
+
+	// Resource management client is responsible for managing resources (joining channels, install/instantiate/upgrade chaincodes)
+	resMgmtClient, err := resmgmt.New(clientContext)
+	if err != nil {
+		log.Fatalf("Failed to create new resource management client")
+	}
+
+	reqPeers := resmgmt.WithTargetEndpoints("peer0.org1.example.com")
+	_, err = resMgmtClient.UpgradeCC("mychannel", req, reqPeers)
+
+	res := response{
+		Success: true,
+		Message: "success to instantiate chaincode",
+	}
+	if err != nil {
+		res.Message = err.Error()
+		res.Success = false
+	}
+
+	out, err := json.Marshal(res)
+	w.Write(out)
+}
+
 
 func getChannels(w http.ResponseWriter, r *http.Request) {
 	log.Print("================ GET CHANNELS ======================")
