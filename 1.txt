@@ -179,3 +179,25 @@ curl -s -X POST \
 2. base on txid
 
 curl -s -X GET http://localhost:4000/channels/mychannel/transactions/1001a8ff00a8f5e68e3d6840db55275e1396b9c01289d1c6f909f6ff9e8590a4?peer=peer0.org1.example.com -H "authorization:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDYxOTU0MDgsIm9yZ05hbWUiOiJvcmcxIiwidXNlcm5hbWUiOiJqaW0ifQ.qtXMHxT0Q0FmbI1uBXO-yRZfFxAQwIElKHAS7fe41Do" -H "content-type: application/json"
+
+docker login
+ 1962  docker images
+ 1963  docker push hyperledger/fabric-peer
+ 1964  docker push hyperledger/fabric-peer amd64-1.4.2-snapshot-2d9b6e2
+ 1965  docker push hyperledger/fabric-peer:amd64-1.4.2-snapshot-2d9b6e2
+ 1966  docker push hyperledger/fabric-peer:latest
+ 1967* docker push 
+ 1968  docker images
+ 1969  docker tag hyperledger/fabric-peer:latest csquan/fabric-peer-gm-1.4.2
+ 1970  docker images
+ 1971  ls
+ 1972  docker push  csquan/fabric-peer-gm-1.4.2
+ 1973  docker images
+ 1974  docker tag hyperledger/fabric-order:latest csquan/fabric-peer-gm-1.4.2
+ 1975  docker tag hyperledger/fabric-orderer:latest csquan/fabric-order-gm-1.4.2
+ 1976  docker images
+ 1977  docker push  csquan/fabric-order-gm-1.4.2
+ 1978  docker tag hyperledger/fabric-ca:latest csquan/fabric-ca-gm-1.4.2
+ 1979  docker push  csquan/fabric-ca-gm-1.4.2
+ 1980  docker images
+ 1981  docker push  csquan/fabric-ca-gm-1.4.2
