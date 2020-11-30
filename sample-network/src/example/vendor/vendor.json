@@ -1,0 +1,25 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "eTBXTLWOHsgpcf99+rUMDk9Fhvc=",
+			"path": "github.com/go-sql-driver/mysql",
+			"revision": "cf72fd249522a0cc5e1ce727dfa15189dcb6411f",
+			"revisionTime": "2020-11-14T01:11:01Z"
+		},
+		{
+			"checksumSHA1": "RZ+5Xbza8Gs7iGHcTlxvhPXN0b0=",
+			"path": "github.com/jmoiron/sqlx",
+			"revision": "0794cb1f47ee444eda9624f952ab8a370bec22de",
+			"revisionTime": "2020-06-15T14:10:59Z"
+		},
+		{
+			"checksumSHA1": "i2O6Ji8ZL6q+EL+4cu/ftBytqZg=",
+			"path": "github.com/jmoiron/sqlx/reflectx",
+			"revision": "0794cb1f47ee444eda9624f952ab8a370bec22de",
+			"revisionTime": "2020-06-15T14:10:59Z"
+		}
+	],
+	"rootPath": "sdk_test/src/example"
+}

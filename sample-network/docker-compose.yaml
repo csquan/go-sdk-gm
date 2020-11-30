@@ -1,0 +1,259 @@
+#
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+version: '2'
+
+services:
+
+  ca.org1.example.com:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_LOGGING_SPEC=ERROR
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-org1
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org1.example.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/83e4f18a25143feb881b3c4e111e67182b1ce1fb03a1add4333c05b12b8f1219_sk
+      - FABRIC_CA_SERVER_TLS_ENABLED=false
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org1.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/83e4f18a25143feb881b3c4e111e67182b1ce1fb03a1add4333c05b12b8f1219_sk
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ./channel2/crypto-config/peerOrganizations/org1.example.com/ca/:/etc/hyperledger/fabric-ca-server/msp/keystore
+        #- ./channel2/crypto-config/peerOrganizations/org1.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca_peerOrg1
+
+  ca.org2.example.com:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_LOGGING_SPEC=ERROR
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-org2
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org2.example.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/76e35be80d395b6e13ca4ce7c061dae97a94bc8f91f2f5f0333e61888c984b36_sk
+      - FABRIC_CA_SERVER_TLS_ENABLED=false
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org2.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/76e35be80d395b6e13ca4ce7c061dae97a94bc8f91f2f5f0333e61888c984b36_sk
+    ports:
+      - "8054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ./channel2/crypto-config/peerOrganizations/org2.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca_peerOrg2
+    
+  orderer.example.com:
+    extends:
+      file:   base.yaml
+      service: orderer-base
+    container_name: orderer.example.com
+    command: orderer
+    ports:
+      - 7050:7050
+    volumes:
+        - ./channel2/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
+        - ./data/orderer:/var/hyperledger/production/
+
+  orderer2.example.com:
+    extends:
+      file: base.yaml
+      service: orderer-base
+    container_name: orderer2.example.com
+    volumes:
+        - ./channel2/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer2.example.com/msp:/var/hyperledger/orderer/msp
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer2.example.com/tls/:/var/hyperledger/orderer/tls
+        - ./data/orderer2:/var/hyperledger/production/
+    ports:
+      - 8050:8050
+
+  orderer3.example.com:
+    extends:
+      file: base.yaml
+      service: orderer-base
+    container_name: orderer3.example.com
+    volumes:
+        - ./channel2/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/msp:/var/hyperledger/orderer/msp
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/:/var/hyperledger/orderer/tls
+        - ./data/orderer3:/var/hyperledger/production/
+    ports:
+      - 9050:9050
+
+  orderer4.example.com:
+    extends:
+      file: base.yaml
+      service: orderer-base
+    container_name: orderer4.example.com
+    volumes:
+        - ./channel2/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer4.example.com/msp:/var/hyperledger/orderer/msp
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer4.example.com/tls/:/var/hyperledger/orderer/tls
+        - ./data/orderer4:/var/hyperledger/production/
+    ports:
+      - 10050:10050
+
+  orderer5.example.com:
+    extends:
+      file: base.yaml
+      service: orderer-base
+    container_name: orderer5.example.com
+    volumes:
+        - ./channel2/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer5.example.com/msp:/var/hyperledger/orderer/msp
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer5.example.com/tls/:/var/hyperledger/orderer/tls
+        - ./data/orderert5:/var/hyperledger/production/
+    ports:
+      - 11050:11050
+
+  couchdb0:
+    container_name: couchdb0
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+      # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
+      # for example map it to utilize Fauxton User Interface in dev environments.
+    ports:
+      - "5984:5984"
+    volumes:  
+      - ./data/couchdb0:/opt/couchdb/data
+
+  peer0.org1.example.com:
+    container_name: peer0.org1.example.com
+    extends:
+      file:   base.yaml
+      service: peer-base
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0:5984
+      # The CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME and CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
+      # provide the credentials for ledger to connect to CouchDB.  The username and password must
+      # match the username and password set for the associated CouchDB.
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+      - CORE_PEER_ID=peer0.org1.example.com
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.org1.example.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org1.example.com:8051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
+    ports:
+      - 7051:7051
+      - 7053:7053
+    volumes:
+        - ./data/peer0:/var/hyperledger/production/
+        - ./src:/opt/gopath/src/github.com/go
+        - ./channel2/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/:/etc/hyperledger/crypto/peer
+        - ./channel2/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+        - ./channel2:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel
+        - /root/gowork/src/github.com/go-sql-driver:/opt/gopath/src/github.com/go-sql-driver
+        - /root/gowork/src/github.com/jmoiron:/opt/gopath/src/github.com/jmoiron
+    depends_on:
+      - orderer.example.com
+      - orderer2.example.com
+      - orderer3.example.com
+      - orderer4.example.com
+      - orderer5.example.com
+
+  peer1.org1.example.com:
+    container_name: peer1.org1.example.com
+    extends:
+      file:   base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_ID=peer1.org1.example.com
+      - CORE_PEER_ADDRESS=peer1.org1.example.com:8051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.org1.example.com:8052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org1.example.com:8051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.example.com:7051
+    ports:
+      - 8051:8051
+      - 8053:8053
+    volumes:
+        - ./data/peer1:/var/hyperledger/production/ 
+        - ./src:/opt/gopath/src/github.com/go
+        - ./channel2/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/:/etc/hyperledger/crypto/peer
+        - ./channel2/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+        - ./channel2:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel
+        - /root/gowork/src/github.com/go-sql-driver:/opt/gopath/src/github.com/go-sql-driver
+        - /root/gowork/src/github.com/jmoiron:/opt/gopath/src/github.com/jmoiron
+    depends_on:
+      - orderer.example.com
+      - orderer2.example.com
+      - orderer3.example.com
+      - orderer4.example.com
+      - orderer5.example.com
+
+  peer0.org2.example.com:
+    container_name: peer0.org2.example.com
+    extends:
+      file:   base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.org2.example.com
+      - CORE_PEER_LOCALMSPID=Org2MSP
+      - CORE_PEER_ADDRESS=peer0.org2.example.com:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.org2.example.com:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.example.com:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org2.example.com:10051
+    ports:
+      - 9051:9051
+      - 9053:9053
+    volumes:
+        - ./data/peer2:/var/hyperledger/production/ 
+        - ./src:/opt/gopath/src/github.com/go
+        - ./channel2/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/:/etc/hyperledger/crypto/peer
+        - ./channel2/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+        - ./channel2:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel
+        - /root/gowork/src/github.com/go-sql-driver:/opt/gopath/src/github.com/go-sql-driver
+        - /root/gowork/src/github.com/jmoiron:/opt/gopath/src/github.com/jmoiron
+    depends_on:
+      - orderer.example.com
+      - orderer2.example.com
+      - orderer3.example.com
+      - orderer4.example.com
+      - orderer5.example.com
+
+  peer1.org2.example.com:
+    container_name: peer1.org2.example.com
+    extends:
+      file:   base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.org2.example.com
+      - CORE_PEER_LOCALMSPID=Org2MSP
+      - CORE_PEER_ADDRESS=peer1.org2.example.com:10051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:10051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.org2.example.com:10052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:10052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org2.example.com:10051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.example.com:9051
+    ports:
+      - 10051:10051
+      - 10053:10053
+    volumes:
+        - ./data/peer3:/var/hyperledger/production/ 
+        - ./src:/opt/gopath/src/github.com/go
+        - ./channel2/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/:/etc/hyperledger/crypto/peer
+        - ./channel2/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+        - ./channel2:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel
+        - /root/gowork/src/github.com/go-sql-driver:/opt/gopath/src/github.com/go-sql-driver
+        - /root/gowork/src/github.com/jmoiron:/opt/gopath/src/github.com/jmoiron
+    depends_on:
+      - orderer.example.com
+      - orderer2.example.com
+      - orderer3.example.com
+      - orderer4.example.com
+      - orderer5.example.com
