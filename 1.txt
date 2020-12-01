@@ -201,3 +201,7 @@ docker login
  1979  docker push  csquan/fabric-ca-gm-1.4.2
  1980  docker images
  1981  docker push  csquan/fabric-ca-gm-1.4.2
+ 
+ 127.0.0.1 ca.org1.example.com ca.org2.example.com orderer.example.com peer0.org1.example.com peer1.org1.example.com peer0.org2.example.com peer1.org2.example.com
+127.0.0.1 orderer.example.com
+
