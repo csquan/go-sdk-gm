@@ -7,23 +7,23 @@ version: '2'
 
 
 services:
-  ca.org2.example.com:
+  ca.org3.example.com:
     image: hyperledger/fabric-ca:latest
     environment:
       - FABRIC_LOGGING_SPEC=ERROR
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
-      - FABRIC_CA_SERVER_CA_NAME=ca-org2
-      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org2.example.com-cert.pem
-      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/76e35be80d395b6e13ca4ce7c061dae97a94bc8f91f2f5f0333e61888c984b36_sk
+      - FABRIC_CA_SERVER_CA_NAME=ca-org3
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org3.example.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/dd954e159011f3686049313ba5cb94bcae236dd163cd9046a21d30da681305f1_sk
       - FABRIC_CA_SERVER_TLS_ENABLED=false
-      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org2.example.com-cert.pem
-      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/76e35be80d395b6e13ca4ce7c061dae97a94bc8f91f2f5f0333e61888c984b36_sk
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org3.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/dd954e159011f3686049313ba5cb94bcae236dd163cd9046a21d30da681305f1_sk
     ports:
-      - "8054:7054"
+      - "7054:7054"
     command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
-      - ./channel2/crypto-config/peerOrganizations/org2.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
-    container_name: ca_peerOrg2
+      - ./channel2/crypto-config/peerOrganizations/org3.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca_peerOrg3
     
 
   couchdb0:
@@ -39,8 +39,8 @@ services:
     volumes:  
       - ./data/couchdb0:/opt/couchdb/data
 
-  peer0.org2.example.com:
-    container_name: peer0.org2.example.com
+  peer0.org3.example.com:
+    container_name: peer0.org3.example.com
     extends:
       file:   base.yaml
       service: peer-base
@@ -52,23 +52,39 @@ services:
       # match the username and password set for the associated CouchDB.
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
-      - CORE_PEER_ID=peer0.org2.example.com
-      - CORE_PEER_LOCALMSPID=Org2MSP
-      - CORE_PEER_ADDRESS=peer0.org2.example.com:9051
+      - CORE_PEER_ID=peer0.org3.example.com
+      - CORE_PEER_LOCALMSPID=Org3MSP
+      - CORE_PEER_ADDRESS=peer0.org3.example.com:9051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.org2.example.com:9052
+      - CORE_PEER_CHAINCODEADDRESS=peer0.org3.example.com:9052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.example.com:9051
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org2.example.com:10051
     ports:
       - 9051:9051
       - 9053:9053
     volumes:
         - ./data/peer2:/var/hyperledger/production/ 
         - ./src:/opt/gopath/src/github.com/go
-        - ./channel2/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/:/etc/hyperledger/crypto/peer
+        - ./channel2/crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/:/etc/hyperledger/crypto/peer
         - ./channel2/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
         - ./channel2:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel
+
+  ca.org4.example.com:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_LOGGING_SPEC=ERROR
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-org4
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org4.example.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/381e60d8ce16825e28f6f3b976a7dbba406bd77a3ac577f6c9496964905ed79d_sk
+      - FABRIC_CA_SERVER_TLS_ENABLED=false
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org4.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/381e60d8ce16825e28f6f3b976a7dbba406bd77a3ac577f6c9496964905ed79d_sk
+    ports:
+      - "8054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ./channel2/crypto-config/peerOrganizations/org4.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca_peerOrg4
 
   couchdb1:
     container_name: couchdb1
@@ -81,8 +97,8 @@ services:
     volumes:
       - ./data/couchdb1:/opt/couchdb/data
                                           
-  peer1.org2.example.com:
-    container_name: peer1.org2.example.com
+  peer0.org4.example.com:
+    container_name: peer0.org4.example.com
     extends:
       file:   base.yaml
       service: peer-base
@@ -91,20 +107,18 @@ services:
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb1:5984
       - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
-      - CORE_PEER_ID=peer1.org2.example.com
-      - CORE_PEER_LOCALMSPID=Org2MSP
-      - CORE_PEER_ADDRESS=peer1.org2.example.com:10051
+      - CORE_PEER_ID=peer0.org4.example.com
+      - CORE_PEER_LOCALMSPID=Org4MSP
+      - CORE_PEER_ADDRESS=peer0.org4.example.com:10051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:10051
       - CORE_PEER_CHAINCODEADDRESS=peer1.org2.example.com:10052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:10052
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org2.example.com:10051
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.example.com:9051
     ports:
       - 10051:10051
       - 10053:10053
     volumes:
         - ./data/peer3:/var/hyperledger/production/ 
         - ./src:/opt/gopath/src/github.com/go
-        - ./channel2/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/:/etc/hyperledger/crypto/peer
+        - ./channel2/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/:/etc/hyperledger/crypto/peer
         - ./channel2/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
         - ./channel2:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel
