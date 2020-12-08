@@ -20,7 +20,7 @@ package main
 import (
 	"fmt"
 	"encoding/json"
-
+	"strconv"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
@@ -71,12 +71,17 @@ func (t *SimpleChaincode) createInsurance(stub shim.ChaincodeStubInterface, args
 		return shim.Error("Incorrect number of arguments. Expecting 10")
 	}
 
+        _, err := stub.GetState(args[0])
+        if err == nil {
+                jsonResp := "{\"Error\":\"InsuranceNum " + args[0]+ " have already exist\"}"
+                return shim.Error(jsonResp)
+        }
 	var insurance = Insurance{InsuranceNum: args[0],OrderNum: args[1],Shipper: args[2], Carrier: args[3],
 	InsuranceCompany: args[4],GoodsName: args[5],Num: args[6], Weight: args[7],Premium: args[8],Status:args[9]}
 
         insuranceAsBytes, _ := json.Marshal(insurance)
 
-	err := stub.PutState(args[0], insuranceAsBytes)
+	err = stub.PutState(args[0], insuranceAsBytes)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -94,6 +99,19 @@ func (s *SimpleChaincode) flagInsuranceStatus(stub shim.ChaincodeStubInterface,a
 	        jsonResp := "{\"Error\":\"Failed to get state for " + args[0]+ "\"}"
 		return shim.Error(jsonResp)
 	}
+
+	no,err := strconv.Atoi(args[1])
+
+        if err != nil {
+                jsonResp := "{\"Error\":\"Failed to chanege " + args[1]+ " to int\"}"
+                return shim.Error(jsonResp)
+        }
+        if no<1 || no>3{
+                jsonResp := "{\"Error\":\"Failed to chanege " + args[1]+ " to 1-3\"}"
+                return shim.Error(jsonResp)
+        }
+
+
 	insurance := Insurance{}
 
 	err = json.Unmarshal(insurancebytes,&insurance)

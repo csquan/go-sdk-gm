@@ -72,7 +72,7 @@ func (t *SimpleChaincode) createCargo(stub shim.ChaincodeStubInterface, args []s
 		return shim.Error("Incorrect number of arguments. Expecting 9")
 	}
 
-	cargobytes, err := stub.GetState(args[0])
+	_, err := stub.GetState(args[0])
 	if err == nil {
 		jsonResp := "{\"Error\":\"OrderNum " + args[0]+ " have already exist\"}"
 		return shim.Error(jsonResp)
