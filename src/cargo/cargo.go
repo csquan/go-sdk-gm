@@ -20,7 +20,7 @@ package main
 import (
 	"fmt"
 	"encoding/json"
-
+	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -72,12 +72,18 @@ func (t *SimpleChaincode) createCargo(stub shim.ChaincodeStubInterface, args []s
 		return shim.Error("Incorrect number of arguments. Expecting 9")
 	}
 
+	cargobytes, err := stub.GetState(args[0])
+	if err == nil {
+		jsonResp := "{\"Error\":\"OrderNum " + args[0]+ " have already exist\"}"
+		return shim.Error(jsonResp)
+	}
+
 	var cargo = Cargo{OrderNum: args[0],Shipper: args[1],Carrier: args[2], Buyer: args[3],
 	GoodsName: args[4],Num: args[5],Weight: args[6], Price: args[7],Status: args[8]}
 
         cargoAsBytes, _ := json.Marshal(cargo)
 
-	err := stub.PutState(args[0], cargoAsBytes)
+	err = stub.PutState(args[0], cargoAsBytes)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -93,6 +99,17 @@ func (s *SimpleChaincode) flagCargoStatus(stub shim.ChaincodeStubInterface,args 
         cargobytes, err := stub.GetState(args[0])
         if err != nil {
 	        jsonResp := "{\"Error\":\"Failed to get state for " + args[0]+ "\"}"
+		return shim.Error(jsonResp)
+	}
+
+	no,err := strconv.Atoi(args[1])
+
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to chanege " + args[1]+ " to int\"}"
+		return shim.Error(jsonResp)
+	}
+	if no<1 || no>4{
+		jsonResp := "{\"Error\":\"Failed to chanege " + args[1]+ " to 1-4\"}"
 		return shim.Error(jsonResp)
 	}
 	cargo := Cargo{}
