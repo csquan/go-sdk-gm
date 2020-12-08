@@ -361,6 +361,19 @@ Channel: &ChannelDefaults
 #
 ################################################################################
 Profiles:
+    FourOrgsChannel:
+        Consortium: SampleConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *Org1
+                - *Org2
+                - *Org3
+                - *Org4
+            Capabilities:
+                <<: *ApplicationCapabilities
+
     SampleMultiNodeEtcdRaft:
         <<: *ChannelDefaults
         Capabilities:
