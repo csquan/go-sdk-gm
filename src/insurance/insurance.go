@@ -18,11 +18,8 @@ package main
 
 
 import (
-	"bytes"
 	"fmt"
-	"time"
 	"encoding/json"
-        "strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -77,7 +74,7 @@ func (t *SimpleChaincode) createInsurance(stub shim.ChaincodeStubInterface, args
 	var insurance = Insurance{InsuranceNum: args[0],OrderNum: args[1],Shipper: args[2], Carrier: args[3],
 	InsuranceCompany: args[4],GoodsName: args[5],Num: args[6], Weight: args[7],Premium: args[8],Status:args[9]}
 
-        insuranceAsBytes, _ := json.Marshali(insurance)
+        insuranceAsBytes, _ := json.Marshal(insurance)
 
 	err := stub.PutState(args[0], insuranceAsBytes)
 	if err != nil {
@@ -110,12 +107,12 @@ func (s *SimpleChaincode) flagInsuranceStatus(stub shim.ChaincodeStubInterface,a
 	insurancechangedAsBytes, _ := json.Marshal(insurance)
 
 
-	err := stub.PutState(args[0], insurancechangedAsBytes)
+	err = stub.PutState(args[0], insurancechangedAsBytes)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	return shim.Success()
+	return shim.Success(nil)
 }
 
 func main() {

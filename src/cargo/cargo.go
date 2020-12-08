@@ -18,11 +18,9 @@ package main
 
 
 import (
-	"bytes"
 	"fmt"
-	"time"
 	"encoding/json"
-        "strconv"
+
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -79,7 +77,7 @@ func (t *SimpleChaincode) createCargo(stub shim.ChaincodeStubInterface, args []s
 
         cargoAsBytes, _ := json.Marshal(cargo)
 
-	err := stub.PutState(OrderNum, cargoAsBytes)
+	err := stub.PutState(args[0], cargoAsBytes)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -109,12 +107,12 @@ func (s *SimpleChaincode) flagCargoStatus(stub shim.ChaincodeStubInterface,args 
 
 	cargochangedAsBytes, _ := json.Marshal(cargo)
 
-	err := stub.PutState(args[0], cargochangedAsBytes)
+	err = stub.PutState(args[0], cargochangedAsBytes)
 
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	return shim.Success()
+	return shim.Success(nil)
 }
 
 func main() {
