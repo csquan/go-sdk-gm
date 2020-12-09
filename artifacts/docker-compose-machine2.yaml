@@ -111,7 +111,7 @@ services:
       - CORE_PEER_LOCALMSPID=Org4MSP
       - CORE_PEER_ADDRESS=peer0.org4.example.com:10051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:10051
-      - CORE_PEER_CHAINCODEADDRESS=peer1.org2.example.com:10052
+      - CORE_PEER_CHAINCODEADDRESS=peer0.org4.example.com:10052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:10052
     ports:
       - 10051:10051
