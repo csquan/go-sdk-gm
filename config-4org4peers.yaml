@@ -29,7 +29,7 @@ client:
     #    level: debug
     level: info
   cryptoconfig:
-    path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config
+    path: ./artifacts/channel2/crypto-config
   # Some SDKs support pluggable KV stores, the properties under "credentialStore"
   # are implementation specific
   credentialStore:
@@ -103,19 +103,19 @@ channels:
         eventSource: true
 
       # Add other peers in mychannel for byfn
-      peer1.org1.example.com:
-        endorsingPeer: true
-        chaincodeQuery: true
-        ledgerQuery: true
-        eventSource: true
-
       peer0.org2.example.com:
         endorsingPeer: true
         chaincodeQuery: true
         ledgerQuery: true
         eventSource: true
 
-      peer1.org2.example.com:
+      peer0.org3.example.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+
+      peer0.org4.example.com:
         endorsingPeer: true
         chaincodeQuery: true
         ledgerQuery: true
@@ -222,11 +222,48 @@ organizations:
     # Add peers for org2
     peers:
       - peer0.org2.example.com
-      - peer1.org2.example.com
-    
     certificateAuthorities:
       - ca-org2
+    
+  Org3:
+    mspid: Org3MSP
+    users:
+      AdminOrg1:
+        key:
+          pem: |
 
+        cert:
+          pem: |
+
+
+    cryptoPath: ./artifacts/channel2/crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp
+
+    # Add peers for org3
+    peers:
+      - peer0.org3.example.com
+    certificateAuthorities:
+      - ca-org3
+
+  Org4:
+    mspid: Org4MSP
+    users:
+      AdminOrg1:
+        key:
+          pem: |
+
+        cert:
+          pem: |
+
+
+    cryptoPath: ./artifacts/channel2/crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp
+
+    # Add peers for org4
+    peers:
+      - peer0.org4.example.com
+    certificateAuthorities:
+      - ca-org4
+
+    
   # Orderer Org name
   ordererorg:
     # Membership Service Provider ID for this organization
@@ -368,31 +405,12 @@ peers:
       allow-insecure: true
 
     tlsCACerts:
-      # Certificate location absolute path
-      #path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
       path: ./artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
-  peer1.org1.example.com:
+  peer0.org2.example.com:
     # this URL is used to send endorsement and query requests
     # [Optional] Default: Infer from hostname
     # 表明使用grpcs协议，设置IP和端口号，使用域名会无法连接
     url: grpcs://127.0.0.1:8051
-    grpcOptions:
-      ssl-target-name-override: peer1.org1.example.com
-      keep-alive-time: 0s
-      keep-alive-timeout: 20s
-      keep-alive-permit: false
-      fail-fast: false
-
-      #will be taken into consideration if address has no protocol defined, if true then grpc or else grpcs
-      allow-insecure: false
-
-    tlsCACerts:
-      # Certificate location absolute path
-      #path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
-      path: ./artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/ca.crt
-  peer0.org2.example.com:
-    # Replace the port
-    url: grpcs://peer0.org2.example.com:9051
     grpcOptions:
       ssl-target-name-override: peer0.org2.example.com
       keep-alive-time: 0s
@@ -402,14 +420,14 @@ peers:
 
       #will be taken into consideration if address has no protocol defined, if true then grpc or else grpcs
       allow-insecure: false
+
     tlsCACerts:
-            #path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org2.example.com/tlsca/tlsca.org2.example.com-cert.pem
       path: ./artifacts/channel2/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
-  peer1.org2.example.com:
+  peer0.org3.example.com:
     # Replace the port
-    url: grpcs://peer1.org2.example.com:10051
+    url: grpcs://peer0.org3.example.com:9051
     grpcOptions:
-      ssl-target-name-override: peer1.org2.example.com
+      ssl-target-name-override: peer0.org3.example.com
       keep-alive-time: 0s
       keep-alive-timeout: 20s
       keep-alive-permit: false
@@ -418,8 +436,21 @@ peers:
       #will be taken into consideration if address has no protocol defined, if true then grpc or else grpcs
       allow-insecure: false
     tlsCACerts:
-            #path: /home/csquan/work/fabric-samples/balance-transfer/artifacts/channel2/crypto-config/peerOrganizations/org2.example.com/tlsca/tlsca.org2.example.com-cert.pem
-      path: ./artifacts/channel2/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/ca.crt
+      path: ./artifacts/channel2/crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls/ca.crt
+  peer0.org4.example.com:
+    # Replace the port
+    url: grpcs://peer0.org4.example.com:10051
+    grpcOptions:
+      ssl-target-name-override: peer0.org4.example.com
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+
+      #will be taken into consideration if address has no protocol defined, if true then grpc or else grpcs
+      allow-insecure: false
+    tlsCACerts:
+      path: ./artifacts/channel2/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/ca.crt
       #
 # Fabric-CA is a special kind of Certificate Authority provided by Hyperledger Fabric which allows
 # certificate management to be done via REST APIs. Application may choose to use a standard
@@ -459,4 +490,37 @@ certificateAuthorities:
     # [Optional] The optional name of the CA.
     caName: ca-org2 
 
+  ca-org3:
+    url: http://ca.org3.example.com:8054
+    httpOptions:
+      verify: false
+    tlsCACerts:
+    #   # Comma-Separated list of paths
+      path: ./artifacts/channel2/crypto-config/peerOrganizations/org3.example.com/ca/ca.org3.example.com-cert.pem
+    #   # Client key and cert for SSL handshake with Fabric CA
+
+     # Fabric-CA supports dynamic user enrollment via REST APIs. A "root" user, a.k.a registrar, is
+     # needed to enroll and invoke new users.
+    registrar:
+      enrollId: admin
+      enrollSecret: adminpw
+    # [Optional] The optional name of the CA.
+    caName: ca-org3 
+  
+  ca-org4:
+    url: http://ca.org4.example.com:8054
+    httpOptions:
+      verify: false
+    tlsCACerts:
+    #   # Comma-Separated list of paths
+      path: ./artifacts/channel2/crypto-config/peerOrganizations/org4.example.com/ca/ca.org4.example.com-cert.pem
+    #   # Client key and cert for SSL handshake with Fabric CA
+
+     # Fabric-CA supports dynamic user enrollment via REST APIs. A "root" user, a.k.a registrar, is
+     # needed to enroll and invoke new users.
+    registrar:
+      enrollId: admin
+      enrollSecret: adminpw
+    # [Optional] The optional name of the CA.
+    caName: ca-org4 
 
