@@ -191,7 +191,7 @@ organizations:
   Org2:
     mspid: Org2MSP
     users:
-      AdminOrg1:
+      AdminOrg2:
         key:
           pem: |
             -----BEGIN PRIVATE KEY-----
@@ -228,12 +228,32 @@ organizations:
   Org3:
     mspid: Org3MSP
     users:
-      AdminOrg1:
+      AdminOrg3:
         key:
           pem: |
+            -----BEGIN PRIVATE KEY-----
+            MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgSl9mAFxXFTMdhNF/
+            fGWVXIqjPDmcmVy4MGLPZQTPTpSgCgYIKoEcz1UBgi2hRANCAAQrH9G2+Ji70mcl
+            PjGvHCcW+0Ii8y+BG49yaR5NXi7va9FQ5CYB0RtHNqpQBeOPXVsn+NIHx5raWxGp
+            nN8L6A2j
+            -----END PRIVATE KEY-----
 
         cert:
           pem: |
+            -----BEGIN CERTIFICATE-----
+            MIICLDCCAdGgAwIBAgIRAIc5yScVbJwG0xH2Zs9heNswCgYIKoEcz1UBg3UwczEL
+            MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+            cmFuY2lzY28xGTAXBgNVBAoTEG9yZzMuZXhhbXBsZS5jb20xHDAaBgNVBAMTE2Nh
+            Lm9yZzMuZXhhbXBsZS5jb20wHhcNMjAxMjA4MDkxMzAwWhcNMzAxMjA2MDkxMzAw
+            WjBsMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMN
+            U2FuIEZyYW5jaXNjbzEPMA0GA1UECxMGY2xpZW50MR8wHQYDVQQDDBZBZG1pbkBv
+            cmczLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEKx/RtviY
+            u9JnJT4xrxwnFvtCIvMvgRuPcmkeTV4u72vRUOQmAdEbRzaqUAXjj11bJ/jSB8ea
+            2lsRqZzfC+gNo6NNMEswDgYDVR0PAQH/BAQDAgeAMAwGA1UdEwEB/wQCMAAwKwYD
+            VR0jBCQwIoAg3ZVOFZAR82hgSTE7pcuUvK4jbdFjzZBGoh0w2mgTBfEwCgYIKoEc
+            z1UBg3UDSQAwRgIhAJBc+Ztz5u8rFNT5ZwGubuOKamh8lHSP8OJtvtf3nzUDAiEA
+            xwnh1w6msMHeslyI4LVCcGCATtEYXlDTH1dfdeNMhuA=
+            -----END CERTIFICATE-----
 
 
     cryptoPath: ./artifacts/channel2/crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp
@@ -247,12 +267,32 @@ organizations:
   Org4:
     mspid: Org4MSP
     users:
-      AdminOrg1:
+      AdminOrg4:
         key:
           pem: |
+            -----BEGIN PRIVATE KEY-----
+            MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgMzpREUXsINBULB26
+            kImsleQsMQeAJio7tjNLq8AYp6igCgYIKoEcz1UBgi2hRANCAAQUAkrcXFFN25dc
+            G5hwEJpUSwr4caoQNIdGbPJX3jRAStdeWBpjjZDcXn/wRT9cewZpS9D8mD5rQbQD
+            foGfmSDZ
+            -----END PRIVATE KEY-----
 
         cert:
           pem: |
+            -----BEGIN CERTIFICATE-----
+            MIICKjCCAdCgAwIBAgIQLGtWoVRvp5mGumpNEQlmtTAKBggqgRzPVQGDdTBzMQsw
+            CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy
+            YW5jaXNjbzEZMBcGA1UEChMQb3JnNC5leGFtcGxlLmNvbTEcMBoGA1UEAxMTY2Eu
+            b3JnNC5leGFtcGxlLmNvbTAeFw0yMDEyMDgwOTEzMDBaFw0zMDEyMDYwOTEzMDBa
+            MGwxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1T
+            YW4gRnJhbmNpc2NvMQ8wDQYDVQQLEwZjbGllbnQxHzAdBgNVBAMMFkFkbWluQG9y
+            ZzQuZXhhbXBsZS5jb20wWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAAQUAkrcXFFN
+            25dcG5hwEJpUSwr4caoQNIdGbPJX3jRAStdeWBpjjZDcXn/wRT9cewZpS9D8mD5r
+            QbQDfoGfmSDZo00wSzAOBgNVHQ8BAf8EBAMCB4AwDAYDVR0TAQH/BAIwADArBgNV
+            HSMEJDAigCA4HmDYzhaCXij287l2p9u6QGvXejrFd/bJSWlkkF7XnTAKBggqgRzP
+            VQGDdQNIADBFAiBefaSiGiKC67EaH4fS9r+7GifYCnWlwMDXVBGkhjSqGgIhAL6G
+            tkUI6PQ6oznhGp781ppXog7GEaqiiHCNWGT2SLp2
+            -----END CERTIFICATE-----
 
 
     cryptoPath: ./artifacts/channel2/crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp
@@ -391,8 +431,8 @@ peers:
     # this URL is used to send endorsement and query requests
     # [Optional] Default: Infer from hostname
     # 表明使用grpcs协议，设置IP和端口号，使用域名会无法连接
-    # url: grpcs://peer0.org1.example.com:7051
-    url: grpcs://127.0.0.1:7051
+    url: grpcs://peer0.org1.example.com:7051
+    #url: grpcs://127.0.0.1:7051
 
     grpcOptions:
       ssl-target-name-override: peer0.org1.example.com
@@ -410,7 +450,8 @@ peers:
     # this URL is used to send endorsement and query requests
     # [Optional] Default: Infer from hostname
     # 表明使用grpcs协议，设置IP和端口号，使用域名会无法连接
-    url: grpcs://127.0.0.1:8051
+    url: grpcs://peer0.org2.example.com:8051
+    #url: grpcs://127.0.0.1:8051
     grpcOptions:
       ssl-target-name-override: peer0.org2.example.com
       keep-alive-time: 0s
@@ -523,4 +564,4 @@ certificateAuthorities:
       enrollSecret: adminpw
     # [Optional] The optional name of the CA.
     caName: ca-org4 
-
+`
