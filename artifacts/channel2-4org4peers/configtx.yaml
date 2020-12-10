@@ -51,19 +51,6 @@ Organizations:
 
         MSPDir: crypto-config/peerOrganizations/org1.example.com/msp
 
-        # Policies defines the set of policies at this level of the config tree
-        # For organization policies, their canonical path is usually
-        #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
-        Policies:
-            Readers:
-                Type: Signature
-                Rule: "OR('Org1MSP.admin', 'Org1MSP.peer', 'Org1MSP.client')"
-            Writers:
-                Type: Signature
-                Rule: "OR('Org1MSP.admin', 'Org1MSP.client')"
-            Admins:
-                Type: Signature
-                Rule: "OR('Org1MSP.admin')"
 
         # leave this flag set to true.
         AnchorPeers:
@@ -82,20 +69,6 @@ Organizations:
         ID: Org2MSP
 
         MSPDir: crypto-config/peerOrganizations/org2.example.com/msp
-
-        # Policies defines the set of policies at this level of the config tree
-        # For organization policies, their canonical path is usually
-        #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
-        Policies:
-            Readers:
-                Type: Signature
-                Rule: "OR('Org2MSP.admin', 'Org2MSP.peer', 'Org2MSP.client')"
-            Writers:
-                Type: Signature
-                Rule: "OR('Org2MSP.admin', 'Org2MSP.client')"
-            Admins:
-                Type: Signature
-                Rule: "OR('Org2MSP.admin')"
 
         AnchorPeers:
             # AnchorPeers defines the location of peers which can be used
@@ -118,16 +91,6 @@ Organizations:
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
         #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
-        Policies:
-            Readers:
-                Type: Signature
-                Rule: "OR('Org3MSP.admin', 'Org3MSP.peer', 'Org3MSP.client')"
-            Writers:
-                Type: Signature
-                Rule: "OR('Org3MSP.admin', 'Org3MSP.client')"
-            Admins:
-                Type: Signature
-                Rule: "OR('Org3MSP.admin')"
 
         AnchorPeers:
             # AnchorPeers defines the location of peers which can be used
@@ -145,20 +108,6 @@ Organizations:
         ID: Org4MSP
 
         MSPDir: crypto-config/peerOrganizations/org4.example.com/msp
-
-        # Policies defines the set of policies at this level of the config tree
-        # For organization policies, their canonical path is usually
-        #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
-        Policies:
-            Readers:
-                Type: Signature
-                Rule: "OR('Org4MSP.admin', 'Org4MSP.peer', 'Org4MSP.client')"
-            Writers:
-                Type: Signature
-                Rule: "OR('Org4MSP.admin', 'Org4MSP.client')"
-            Admins:
-                Type: Signature
-                Rule: "OR('Org4MSP.admin')"
 
         AnchorPeers:
             # AnchorPeers defines the location of peers which can be used
