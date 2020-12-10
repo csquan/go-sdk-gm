@@ -1,0 +1,74 @@
+#
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+version: '2'
+
+services:
+  orderer.example.com:
+    extends:
+      file:   base.yaml
+      service: orderer-base
+    container_name: orderer.example.com
+    command: orderer
+    ports:
+      - 7050:7050
+    volumes:
+        - ./channel2/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
+        - ./data/orderer:/var/hyperledger/production/
+
+  orderer2.example.com:
+    extends:
+      file: base.yaml
+      service: orderer-base
+    container_name: orderer2.example.com
+    volumes:
+        - ./channel2/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer2.example.com/msp:/var/hyperledger/orderer/msp
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer2.example.com/tls/:/var/hyperledger/orderer/tls
+        - ./data/orderer2:/var/hyperledger/production/
+    ports:
+      - 8050:8050
+
+  orderer3.example.com:
+    extends:
+      file: base.yaml
+      service: orderer-base
+    container_name: orderer3.example.com
+    volumes:
+        - ./channel2/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/msp:/var/hyperledger/orderer/msp
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/:/var/hyperledger/orderer/tls
+        - ./data/orderer3:/var/hyperledger/production/
+    ports:
+      - 9050:9050
+
+  orderer4.example.com:
+    extends:
+      file: base.yaml
+      service: orderer-base
+    container_name: orderer4.example.com
+    volumes:
+        - ./channel2/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer4.example.com/msp:/var/hyperledger/orderer/msp
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer4.example.com/tls/:/var/hyperledger/orderer/tls
+        - ./data/orderer4:/var/hyperledger/production/
+    ports:
+      - 10050:10050
+
+  orderer5.example.com:
+    extends:
+      file: base.yaml
+      service: orderer-base
+    container_name: orderer5.example.com
+    volumes:
+        - ./channel2/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer5.example.com/msp:/var/hyperledger/orderer/msp
+        - ./channel2/crypto-config/ordererOrganizations/example.com/orderers/orderer5.example.com/tls/:/var/hyperledger/orderer/tls
+        - ./data/orderert5:/var/hyperledger/production/
+    ports:
+      - 11050:11050
+

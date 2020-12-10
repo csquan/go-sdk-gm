@@ -14,15 +14,15 @@ services:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_CA_NAME=ca-org3
       - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org3.example.com-cert.pem
-      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/dd954e159011f3686049313ba5cb94bcae236dd163cd9046a21d30da681305f1_sk
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/455ed03e11a2bbd5cf8af19f5bd4c725f7cd18c054b24188c151dcb098623fb2_sk
       - FABRIC_CA_SERVER_TLS_ENABLED=false
       - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org3.example.com-cert.pem
-      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/dd954e159011f3686049313ba5cb94bcae236dd163cd9046a21d30da681305f1_sk
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/455ed03e11a2bbd5cf8af19f5bd4c725f7cd18c054b24188c151dcb098623fb2_sk
     ports:
       - "7054:7054"
     command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
-      - ./channel2/crypto-config/peerOrganizations/org3.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+      - ./channel2/crypto-config/peerOrganizations/org3.example.com/ca/:/etc/hyperledger/fabric-ca-server/msp/keystore
     container_name: ca_peerOrg3
     
 
@@ -54,10 +54,11 @@ services:
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
       - CORE_PEER_ID=peer0.org3.example.com
       - CORE_PEER_LOCALMSPID=Org3MSP
-      - CORE_PEER_ADDRESS=peer0.org3.example.com:9051
+        #- CORE_PEER_ADDRESS=peer0.org3.example.com:9051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
       - CORE_PEER_CHAINCODEADDRESS=peer0.org3.example.com:9052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org3.example.com:9051
     ports:
       - 9051:9051
       - 9053:9053
@@ -75,15 +76,15 @@ services:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_CA_NAME=ca-org4
       - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org4.example.com-cert.pem
-      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/381e60d8ce16825e28f6f3b976a7dbba406bd77a3ac577f6c9496964905ed79d_sk
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/c126d707ebcaef62d34079a53fbfbcafee0c036d1870d04e4cc06fcd0c083abf_sk
       - FABRIC_CA_SERVER_TLS_ENABLED=false
       - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org4.example.com-cert.pem
-      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/381e60d8ce16825e28f6f3b976a7dbba406bd77a3ac577f6c9496964905ed79d_sk
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/c126d707ebcaef62d34079a53fbfbcafee0c036d1870d04e4cc06fcd0c083abf_sk
     ports:
       - "8054:7054"
     command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
-      - ./channel2/crypto-config/peerOrganizations/org4.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+      - ./channel2/crypto-config/peerOrganizations/org4.example.com/ca/:/etc/hyperledger/fabric-ca-server/msp/keystore
     container_name: ca_peerOrg4
 
   couchdb1:
@@ -109,10 +110,11 @@ services:
       - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
       - CORE_PEER_ID=peer0.org4.example.com
       - CORE_PEER_LOCALMSPID=Org4MSP
-      - CORE_PEER_ADDRESS=peer0.org4.example.com:10051
+        #- CORE_PEER_ADDRESS=peer0.org4.example.com:10051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:10051
       - CORE_PEER_CHAINCODEADDRESS=peer0.org4.example.com:10052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:10052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org4.example.com:10051
     ports:
       - 10051:10051
       - 10053:10053
