@@ -518,3 +518,61 @@ certificateAuthorities:
     # [Optional] The optional name of the CA.
     caName: ca-org1 
 
+  ca-org2:
+    url: http://ca.org2.example.com:8054
+    httpOptions:
+      verify: false
+    tlsCACerts:
+    #   # Comma-Separated list of paths
+      path: /root/go/src/go-sdk-gm/artifacts/channel2/crypto-config/peerOrganizations/org2.example.com/tlsca/tlsca.org2.example.com-cert.pem
+       
+            #path: ./artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/cacerts/ca.org1.example.com-cert.pem
+            #   # Client key and cert for SSL handshake with Fabric CA
+
+    # Fabric-CA supports dynamic user enrollment via REST APIs. A "root" user, a.k.a registrar, is
+    # needed to enroll and invoke new users.
+    registrar:
+      enrollId: admin
+      enrollSecret: adminpw
+    # [Optional] The optional name of the CA.
+    caName: ca-org2
+
+  ca-org3:
+    url: http://ca.org3.example.com:7054
+    httpOptions:
+      verify: false
+    tlsCACerts:
+    #   # Comma-Separated list of paths
+      path: /root/go/src/go-sdk-gm/artifacts/channel2/crypto-config/peerOrganizations/org3.example.com/tlsca/tlsca.org3.example.com-cert.pem
+       
+            #path: ./artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/cacerts/ca.org1.example.com-cert.pem
+            #   # Client key and cert for SSL handshake with Fabric CA
+
+    # Fabric-CA supports dynamic user enrollment via REST APIs. A "root" user, a.k.a registrar, is
+    # needed to enroll and invoke new users.
+    registrar:
+      enrollId: admin
+      enrollSecret: adminpw
+    # [Optional] The optional name of the CA.
+    caName: ca-org3
+
+  ca-org4:
+    url: http://ca.org4.example.com:8054
+    httpOptions:
+      verify: false
+    tlsCACerts:
+    #   # Comma-Separated list of paths
+      path: /root/go/src/go-sdk-gm/artifacts/channel2/crypto-config/peerOrganizations/org4.example.com/tlsca/tlsca.org4.example.com-cert.pem
+       
+            #path: ./artifacts/channel2/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/cacerts/ca.org1.example.com-cert.pem
+            #   # Client key and cert for SSL handshake with Fabric CA
+
+    # Fabric-CA supports dynamic user enrollment via REST APIs. A "root" user, a.k.a registrar, is
+    # needed to enroll and invoke new users.
+    registrar:
+      enrollId: admin
+      enrollSecret: adminpw
+    # [Optional] The optional name of the CA.
+    caName: ca-org4
+    
+
