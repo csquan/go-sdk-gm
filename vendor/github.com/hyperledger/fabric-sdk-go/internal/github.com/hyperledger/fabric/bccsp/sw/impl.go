@@ -20,7 +20,6 @@ Please review third_party pinning scripts and patches for more details.
 package sw
 
 import (
-	"fmt"
 	"hash"
 	"reflect"
 
@@ -172,8 +171,6 @@ func (csp *CSP) KeyImport(raw interface{}, opts bccsp.KeyImportOpts) (k bccsp.Ke
 func (csp *CSP) GetKey(ski []byte) (k bccsp.Key, err error) {
 	k, err = csp.ks.GetKey(ski)
 	if err != nil {
-		fmt.Println("======ski======")
-		fmt.Println(string(ski))
 		return nil, errors.Wrapf(err, "Failed getting key for SKI [%v]", ski)
 	}
 

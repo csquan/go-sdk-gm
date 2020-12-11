@@ -18,7 +18,6 @@ package gm
 import (
 	"crypto/sha256"
 	"crypto/sha512"
-	"fmt"
 	"hash"
 	"reflect"
 
@@ -238,8 +237,6 @@ func (csp *impl) KeyImport(raw interface{}, opts bccsp.KeyImportOpts) (k bccsp.K
 func (csp *impl) GetKey(ski []byte) (k bccsp.Key, err error) {
 	k, err = csp.ks.GetKey(ski)
 	if err != nil {
-		fmt.Println("======ski======")
-		fmt.Println(string(ski))
 		return nil, errors.Wrapf(err, "Failed getting key for SKI [%v]", ski)
 	}
 
