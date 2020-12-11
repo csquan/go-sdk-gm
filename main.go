@@ -12,7 +12,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	_ "github.com/hyperledger/fabric-protos-go/common"
 	"github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/common/cauthdsl"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	ledger "github.com/hyperledger/fabric-sdk-go/pkg/client/ledger"
@@ -27,7 +26,6 @@ import (
 )
 
 const (
-	channelID      = "mychannel"
 	orgName        = "Org1"
 	orgAdmin       = "Admin"
 	ordererOrgName = "OrdererOrg"
@@ -146,6 +144,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		if ctxProvider == nil {
 			log.Fatalf("failed to create ctxProvider")
 		}
+
 		msp, err := mspclient.New(ctxProvider)
 		if err != nil {
 			log.Fatal("failed to call new for create msp", err.Error())
@@ -170,6 +169,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 			identity, _ := msp.GetIdentity(user)
 			if true {
 				log.Printf("User %s does not exist, registering new user", user)
+
 				_, err = msp.Register(&mspclient.RegistrationRequest{
 					Name:        user,
 					Type:        org,
@@ -183,8 +183,6 @@ func login(w http.ResponseWriter, r *http.Request) {
 			log.Printf("secret: %s ", secret)
 
 		}
-		log.Print("====================user==================")
-		log.Print(user)
 		err = msp.Enroll(user, mspclient.WithSecret("123"))
 		res := response{Success: true, Message: "success to enroll user"}
 		if err != nil {
@@ -208,10 +206,15 @@ func getChainInfo(w http.ResponseWriter, r *http.Request) {
 		Success bool
 		Message string
 	}
-	vars := mux.Vars(r)
 	user := "Admin"
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+	channelID := r.Form.Get("channelID")
+
 	org := r.Header.Get("orgName")
-	channelContext := sdk.ChannelContext(vars["channelName"], fabsdk.WithUser(user), fabsdk.WithOrg(org))
+	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(user), fabsdk.WithOrg(org))
 	client, err := ledger.New(channelContext)
 	if err != nil {
 		log.Fatalf("Failed to create new ledger client: %s", err)
@@ -273,7 +276,6 @@ func getInstantiatedChaincodes(w http.ResponseWriter, r *http.Request) {
 		Success bool
 		Message string
 	}
-	vars := mux.Vars(r)
 	org1AdminClientContext := sdk.Context(fabsdk.WithUser("AdminOrg1"), fabsdk.WithOrg("Org1"))
 	client, err := resmgmt.New(org1AdminClientContext)
 	if err != nil {
@@ -281,7 +283,9 @@ func getInstantiatedChaincodes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	endpoint := r.URL.Query().Get("peer")
-	chaincodeQueryRes, err := client.QueryInstantiatedChaincodes(vars["channelName"], resmgmt.WithTargetEndpoints(endpoint))
+
+	channelID := r.URL.Query().Get("channelID")
+	chaincodeQueryRes, err := client.QueryInstantiatedChaincodes(channelID, resmgmt.WithTargetEndpoints(endpoint))
 	if err != nil {
 		log.Fatalf("Failed to QueryInstantiatedChaincodes: %s", err.Error())
 	}
@@ -312,7 +316,6 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	channel := channelConfig{}
 	decoder.Decode(&channel)
-
 	clientContext := sdk.Context(fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(ordererOrgName))
 
 	// Resource management client is responsible for managing channels (create/update channel)
@@ -330,7 +333,7 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(err)
 	}
-	req := resmgmt.SaveChannelRequest{ChannelID: channelID,
+	req := resmgmt.SaveChannelRequest{ChannelID: channel.Name,
 		ChannelConfigPath: channel.Path,
 		SigningIdentities: []msp.SigningIdentity{adminIdentity}}
 	_, err = resMgmtClient.SaveChannel(req, resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com"))
@@ -350,12 +353,12 @@ func joinChannel(w http.ResponseWriter, r *http.Request) {
 		Message string
 	}
 	type joinConfig struct {
+		ChannelID string
 		Org string
 	}
 	decoder := json.NewDecoder(r.Body)
 	join := joinConfig{}
 	decoder.Decode(&join)
-
 	//prepare context
 	adminContext := sdk.Context(fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(join.Org))
 
@@ -366,7 +369,7 @@ func joinChannel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Org peers join channel
-	err = orgResMgmt.JoinChannel(channelID, resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com"));
+	err = orgResMgmt.JoinChannel(join.ChannelID, resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com"));
 
 	res := response{
 		Success: true,
@@ -391,6 +394,11 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	//username := "Admin" //r.Header.Get("username")
 	//orgName := orgName
 	//blockID, _ := strconv.ParseUint("1", 10, 64)
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+	channelID := r.Form.Get("channelID")
 
 	clientContext := sdk.Context(fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(ordererOrgName))
 	resMgmtClient, err := resmgmt.New(clientContext)
@@ -420,6 +428,11 @@ func queryCC(w http.ResponseWriter, r *http.Request) {
 		Message string
 	}
 
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+        channelID := r.Form.Get("channelID")
 	ccp := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"))
 	cc, err := channel.New(ccp)
 	if err != nil {
@@ -461,6 +474,7 @@ func invokeCC(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type invokeConfig struct {
+		ChannelID string
 		Peers  []string
 		Fcn    string
 		Args   []string
@@ -472,7 +486,7 @@ func invokeCC(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 
-	ccp := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"))
+	ccp := sdk.ChannelContext(invoke.ChannelID, fabsdk.WithUser("Admin"))
 	cc, err := channel.New(ccp)
 	if err != nil {
 		log.Panicf("failed to create channel client: %s", err.Error())
@@ -548,7 +562,7 @@ func InstallChainCode(w http.ResponseWriter, r *http.Request) {
 		Success bool
 		Message string
 	}
-	ccPkg, err := packager.NewCCPackage(install.Path, "/root/gowork")
+	ccPkg, err := packager.NewCCPackage(install.Path, "/root/go")
 	if err != nil {
 		log.Fatalf("pack chaincode error %s", err.Error())
 	}
@@ -594,21 +608,16 @@ func InstantiateChainCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type instantiateConfig struct {
+		ChannelID string
 		Name    string
 		Version string
 		Path    string
 		Args    []string
 	}
-
-	log.Print("++++instantiate r.Body+++")
-	log.Print(r.Body)
-
 	decoder := json.NewDecoder(r.Body)
 	instantiate := instantiateConfig{}
 	decoder.Decode(&instantiate)
 
-	log.Print("++++instantiate+++")
-	log.Print(instantiate)
 
 	ccPolicy := cauthdsl.SignedByMspMember("Org1MSP")
 
@@ -631,7 +640,7 @@ func InstantiateChainCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqPeers := resmgmt.WithTargetEndpoints("peer0.org1.example.com")
-	_, err = resMgmtClient.InstantiateCC("mychannel", req, reqPeers)
+	_, err = resMgmtClient.InstantiateCC(instantiate.ChannelID, req, reqPeers)
 
 	res := response{
 		Success: true,
@@ -656,6 +665,7 @@ func UpgradeChainCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type upgradeConfig struct {
+		ChannelID string
 		Name    string
 		Version string
 		Path    string
@@ -666,7 +676,7 @@ func UpgradeChainCode(w http.ResponseWriter, r *http.Request) {
 	upgrade := upgradeConfig{}
 	decoder.Decode(&upgrade)
 
-	log.Print("++++instantiate+++")
+	log.Print("++++upgrade+++")
 	log.Print(upgrade)
 
 	ccPolicy := cauthdsl.SignedByMspMember("Org1MSP")
@@ -688,7 +698,7 @@ func UpgradeChainCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqPeers := resmgmt.WithTargetEndpoints("peer0.org1.example.com")
-	_, err = resMgmtClient.UpgradeCC("mychannel", req, reqPeers)
+	_, err = resMgmtClient.UpgradeCC(upgrade.ChannelID, req, reqPeers)
 
 	res := response{
 		Success: true,
@@ -750,7 +760,7 @@ func getTransactionByID(w http.ResponseWriter, r *http.Request) {
 		Message string
 	}
 
-	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
+	channelContext := sdk.ChannelContext("mychannel", fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
 
 	client, err := ledger.New(channelContext)
 	if err != nil {
