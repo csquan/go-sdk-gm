@@ -64,13 +64,13 @@ func main() {
 	r.Handle("/channels/{channelName}/upgradechaincodes", authMiddleware(http.HandlerFunc(UpgradeChainCode))).Methods("POST")
 	r.Handle("/channels/{channelName}/chaincodes/{chaincodeName}", authMiddleware(http.HandlerFunc(queryCC))).Methods("GET")
 	r.Handle("/channels/{channelName}/invokechaincodes/{chaincodeName}", authMiddleware(http.HandlerFunc(invokeCC))).Methods("POST")
-	r.Handle("/channels/{channelName}/blocks/{blockID}", authMiddleware(http.HandlerFunc(getBlockByNumber))).Methods("GET")
-	r.Handle("/channels/{channelName}/blocks", authMiddleware(http.HandlerFunc(QueryConfigBlockFromOrderer))).Methods("GET")
-	r.Handle("/channels/{channelName}/transactions/{transactionID}", authMiddleware(http.HandlerFunc(getTransactionByID))).Methods("GET")
+	r.Handle("/channels/{channelName}/blocks", authMiddleware(http.HandlerFunc(getBlockByNumber))).Methods("GET")
+	r.Handle("/channels/configblock", authMiddleware(http.HandlerFunc(QueryConfigBlockFromOrderer))).Methods("GET")
+	r.Handle("/channels/tx", authMiddleware(http.HandlerFunc(getTransactionByID))).Methods("GET")
 	r.Handle("/channels/{channelName}", authMiddleware(http.HandlerFunc(getChainInfo))).Methods("GET")
-	r.Handle("/channels/blockbyhash", authMiddleware(http.HandlerFunc(getBlockByHash))).Methods("GET")
-	r.Handle("/channels/blockbytxid", authMiddleware(http.HandlerFunc(getBlockByTXID))).Methods("GET")
-	r.Handle("/channels/channelconfig", authMiddleware(http.HandlerFunc(QueryChannelConfig))).Methods("GET")
+	r.Handle("/blockbyhash", authMiddleware(http.HandlerFunc(getBlockByHash))).Methods("GET")
+	r.Handle("/blockbytxid", authMiddleware(http.HandlerFunc(getBlockByTXID))).Methods("GET")
+	r.Handle("/channelconfig", authMiddleware(http.HandlerFunc(QueryChannelConfig))).Methods("GET")
 	r.Handle("/chaincodes", authMiddleware(http.HandlerFunc(getInstalledChaincodes))).Methods("GET")
 	r.Handle("/channels/{channelName}/chaincodes", authMiddleware(http.HandlerFunc(getInstantiatedChaincodes))).Methods("GET")
 	r.Handle("/channels", authMiddleware(http.HandlerFunc(getChannels))).Methods("GET")
@@ -390,7 +390,7 @@ func joinChannel(w http.ResponseWriter, r *http.Request) {
 }
 
 func QueryConfigBlockFromOrderer(w http.ResponseWriter, r *http.Request) {
-	log.Print("==================== GET BLOCK BY NUMBER ==================")
+	log.Print("====================QueryConfigBlockFromOrderer ==================")
 
 	// define response
 	type response struct {
@@ -420,7 +420,7 @@ func QueryConfigBlockFromOrderer(w http.ResponseWriter, r *http.Request) {
 		res.Success = false
 		log.Panicf("QueryConfigBlockFromOrderer return error: %s", err.Error())
 	} else {
-		log.Print("====getBlockByNumber success=============")
+		log.Print("====QueryConfigBlockFromOrderer success=============")
 		log.Print(ret)
 		res.Message = ret.String()
 	}
@@ -766,16 +766,18 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 func getTransactionByID(w http.ResponseWriter, r *http.Request) {
 	log.Print("================ GET TRANSACTION BY TRANSACTION_ID ======================")
 
-	vars := mux.Vars(r)
 
 	log.Print(orgName)
 	type response struct {
 		Success bool
 		Message string
 	}
-	txid := vars["transactionID"]
-	channelID := vars["channelID"]
-
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+	txid := r.Form.Get("transactionID")
+ 	channelID := r.Form.Get("channelID")
 	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
 
 	client, err := ledger.New(channelContext)
@@ -799,7 +801,7 @@ func getTransactionByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func getBlockByHash(w http.ResponseWriter, r *http.Request) {
-	log.Print("================ GET CHANNEL INFORMATION ======================")
+	log.Print("================ GET BLOCK BY HASH ======================")
 	// define response
 	type response struct {
 		Success bool
@@ -811,17 +813,22 @@ func getBlockByHash(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	channelID := r.Form.Get("channelID")
-
-	org := r.Header.Get("orgName")
+	peer := r.Form.Get("peer")
+	org := r.Form.Get("orgName")
 	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(user), fabsdk.WithOrg(org))
 	client, err := ledger.New(channelContext)
 	if err != nil {
 		log.Fatalf("Failed to create new ledger client: %s", err)
 	}
 	blockHash := r.Form.Get("blockhash")
-	block, _ := client.QueryBlockByHash([]byte(blockHash),ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
+	blockHash = "yzHpSOo7Yb7NHP8BTQs6dLueutDqC4VtEfcO90+Nn80"
+	block, _ := client.QueryBlockByHash([]byte(blockHash),ledger.WithTargetEndpoints(peer))
 
 	ret, err := json.Marshal(block)
+	log.Print("================ GET BLOCK BY HASH Start======================")
+	fmt.Print(block)
+	fmt.Print(blockHash)
+	log.Print("================ GET BLOCK BY HASH End======================")
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(ret)
 }
@@ -847,8 +854,7 @@ func getBlockByTXID(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("Failed to create new ledger client: %s", err)
 	}
-	vars := mux.Vars(r)
-	txid := vars["transactionID"]
+	txid := r.Form.Get("txid") 
 	block, _ := client.QueryBlockByTxID(fab.TransactionID(txid),ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
 
 	ret, err := json.Marshal(block)
@@ -870,7 +876,7 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	}
 	channelID := r.Form.Get("channelID")
 	blockID := r.Form.Get("blockID")
-
+        log.Print(blockID)
 	blockNumber,err := strconv.ParseUint(blockID,10,64)
 	if err != nil {
 		panic(err)
@@ -912,7 +918,7 @@ func QueryChannelConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	block, _ := client.QueryConfig(ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
-
+fmt.Print(block)
 	ret, err := json.Marshal(block)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(ret)
