@@ -54,25 +54,12 @@ setChaincodePath
 
 echo "POST request Enroll on Org1  ..."
 echo
-ORG1_TOKEN=$(curl -s -X POST \
-  http://localhost:4000/users \
-  -H "content-type: application/x-www-form-urlencoded" \
-  -d 'username=jim&orgName=org1&secret=123')
+ORG1_TOKEN=$(curl -s -X GET \
+	  "http://localhost:4000/users?username=jim&orgName=org1&secret=123")
 echo $ORG1_TOKEN
 ORG1_TOKEN=$(echo $ORG1_TOKEN | jq ".Token" | sed "s/\"//g")
 echo
 echo "ORG1 token is $ORG1_TOKEN"
-echo
-echo "POST request Enroll on Org2 ..."
-echo
-ORG2_TOKEN=$(curl -s -X POST \
-  http://localhost:4000/users \
-  -H "content-type: application/x-www-form-urlencoded" \
-  -d 'username=barry&orgName=org2&secret=123')
-echo $ORG2_TOKEN
-ORG2_TOKEN=$(echo $ORG2_TOKEN | jq ".Token" | sed "s/\"//g")
-echo
-echo "ORG2 token is $ORG2_TOKEN"
 echo
 echo
 echo "POST request Create channel  ..."
@@ -210,7 +197,7 @@ echo $TX_INFO
 echo "GET query Block by blockNumber"
 echo
 BLOCK_INFO=$(curl -s -X GET \
-	  "http://localhost:4000/channels/mychannel/blocks/1?peer=peer0.org1.example.com" \
+	  "http://localhost:4000/channels/mychannel/blocks?peer=peer0.org1.example.com&channelID=cargochannel&blockID=2" \
 	   -H "authorization:$ORG1_TOKEN" \
 	   -H "content-type: application/json")
 echo $BLOCK_INFO
@@ -233,7 +220,7 @@ sleep 5
 echo "GET query ChainInfo"
 echo
 curl -s -X GET \
-  "http://localhost:4000/channels/mychannel?peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels/mychannel?peer=peer0.org1.example.com&channelID=cargochannel" \
   -H "authorization:$ORG1_TOKEN" \
   -H "content-type: application/json"
 echo
@@ -251,7 +238,7 @@ echo
 echo "GET query Instantiated chaincodes"
 echo
 curl -s -X GET \
-  "http://localhost:4000/channels/mychannel/chaincodes?peer=peer0.org1.example.com" \
+  "http://localhost:4000/channels/mychannel/chaincodes?peer=peer0.org1.example.com&channelID=cargochannel" \
   -H "authorization:$ORG1_TOKEN" \
   -H "content-type: application/json"
 echo
