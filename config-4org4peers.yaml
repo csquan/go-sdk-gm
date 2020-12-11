@@ -63,7 +63,7 @@ client:
 #
 channels:
   # name of the channel
-  mychannel:
+  cargochannel:
     # Required. list of orderers designated by the application to use for transactions on this
     # channel. This list can be a result of access control ("org1" can only access "ordererA"), or
     # operational decisions to share loads from applications among the orderers.  The values must
@@ -72,7 +72,6 @@ channels:
     #    orderers:
     #      - orderer.example.com
 
-    # 不要缺少当前channel的orderer节点
     orderers:
       - orderer.example.com
         #- orderer2.example.com
@@ -141,7 +140,7 @@ channels:
           #[Optional] he factor by which the initial back off period is exponentially incremented
           backoffFactor: 2.0
 
-  mychannel1:
+  insurancechannel:
     orderers:
       - orderer.example.com
         #- orderer2.example.com
