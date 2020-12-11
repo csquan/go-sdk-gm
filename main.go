@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -24,6 +25,16 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
+	"github.com/hyperledger/fabric/core/ledger/util"
+	"github.com/hyperledger/fabric/protos/common"
+	"github.com/hyperledger/fabric/protos/utils"
+
+	"encoding/base64"
+	"fmt"
+
+	"github.com/hyperledger/fabric/core/ledger/util"
+	"github.com/hyperledger/fabric/protos/common"
+	"github.com/hyperledger/fabric/protos/utils"
 )
 
 const (
@@ -834,6 +845,78 @@ func getBlockByHash(w http.ResponseWriter, r *http.Request) {
 }
 
 
+func parseBlock(block *common.Block) error {
+    var err error
+
+    // Handle header
+    fmt.Printf("Block: Number=[%d], CurrentBlockHash=[%s], PreviousBlockHash=[%s]\n",
+                        block.GetHeader().Number,
+                        base64.StdEncoding.EncodeToString(block.GetHeader().DataHash),
+                        base64.StdEncoding.EncodeToString(block.GetHeader().PreviousHash))
+
+    // Handle transaction
+    var tranNo int64 = -1
+    txsFilter := util.TxValidationFlags(block.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
+    if len(txsFilter) == 0 {
+        txsFilter = util.NewTxValidationFlags(len(block.Data.Data))
+        block.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER] = txsFilter
+    }
+
+    for _, envBytes := range block.Data.Data {
+        tranNo++
+        if txsFilter.IsInvalid(int(tranNo)) {
+            fmt.Printf("    Transaction: No=[%d], Status=[INVALID]\n", tranNo)
+            continue
+        } else {
+            fmt.Printf("    Transaction: No=[%d], Status=[VALID]\n",   tranNo)
+        }
+
+        var env *common.Envelope
+        if env, err = utils.GetEnvelopeFromBlock(envBytes); err != nil {
+            return err
+        }
+
+        var payload *common.Payload
+        if payload, err = utils.GetPayload(env); err != nil {
+            return err
+        }
+
+        var chdr *common.ChannelHeader
+        if chdr, err = utils.UnmarshalChannelHeader(payload.Header.ChannelHeader); err != nil {
+            return err
+        }
+        fmt.Printf("        txid=[%s], channel=[%s]\n", chdr.TxId, chdr.ChannelId)
+/*
+        var shdr *common.SignatureHeader
+        if shdr, err = utils.GetSignatureHeader(payload.Header.SignatureHeader); err != nil {
+            return err
+        }
+
+        var mspid, subject string
+        if mspid, subject, err = decodeSerializedIdentity(shdr.Creator); err != nil {
+            return err
+        }
+        fmt.Printf("        creator=[%s:%s]\n", mspid, subject)
+
+        if common.HeaderType(chdr.Type) == common.HeaderType_CONFIG {
+            fmt.Printf("        type=[CONFIG]\n")
+            if err = parseConfig(payload); err != nil {
+                return err
+            }
+        } else if common.HeaderType(chdr.Type) == common.HeaderType_ENDORSER_TRANSACTION {
+            fmt.Printf("        type=[ENDORSER_TRANSACTION]\n")
+            if err = parseEndorserTransaction(payload); err != nil {
+                return err
+            }
+        } else {
+            fmt.Printf("        txid=[%s], channel=[%s], type=[UNKNOWN]\n", chdr.TxId, chdr.ChannelId)
+		}
+		*/
+    }
+
+    return nil
+}
+
 func getBlockByTXID(w http.ResponseWriter, r *http.Request) {
 	log.Print("================ QueryBlockByTxID ======================")
 	// define response
@@ -857,6 +940,9 @@ func getBlockByTXID(w http.ResponseWriter, r *http.Request) {
 	txid := r.Form.Get("txid") 
 	block, _ := client.QueryBlockByTxID(fab.TransactionID(txid),ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
 
+	//parse block here
+
+	parseblock(block)
 	ret, err := json.Marshal(block)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(ret)
