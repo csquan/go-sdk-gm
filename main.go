@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -64,8 +65,12 @@ func main() {
 	r.Handle("/channels/{channelName}/chaincodes/{chaincodeName}", authMiddleware(http.HandlerFunc(queryCC))).Methods("GET")
 	r.Handle("/channels/{channelName}/invokechaincodes/{chaincodeName}", authMiddleware(http.HandlerFunc(invokeCC))).Methods("POST")
 	r.Handle("/channels/{channelName}/blocks/{blockID}", authMiddleware(http.HandlerFunc(getBlockByNumber))).Methods("GET")
+	r.Handle("/channels/{channelName}/blocks", authMiddleware(http.HandlerFunc(QueryConfigBlockFromOrderer))).Methods("GET")
 	r.Handle("/channels/{channelName}/transactions/{transactionID}", authMiddleware(http.HandlerFunc(getTransactionByID))).Methods("GET")
 	r.Handle("/channels/{channelName}", authMiddleware(http.HandlerFunc(getChainInfo))).Methods("GET")
+	r.Handle("/channels/blockbyhash", authMiddleware(http.HandlerFunc(getBlockByHash))).Methods("GET")
+	r.Handle("/channels/blockbytxid", authMiddleware(http.HandlerFunc(getBlockByTXID))).Methods("GET")
+	r.Handle("/channels/channelconfig", authMiddleware(http.HandlerFunc(QueryChannelConfig))).Methods("GET")
 	r.Handle("/chaincodes", authMiddleware(http.HandlerFunc(getInstalledChaincodes))).Methods("GET")
 	r.Handle("/channels/{channelName}/chaincodes", authMiddleware(http.HandlerFunc(getInstantiatedChaincodes))).Methods("GET")
 	r.Handle("/channels", authMiddleware(http.HandlerFunc(getChannels))).Methods("GET")
@@ -383,7 +388,8 @@ func joinChannel(w http.ResponseWriter, r *http.Request) {
 	out, err := json.Marshal(res)
 	w.Write(out)
 }
-func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
+
+func QueryConfigBlockFromOrderer(w http.ResponseWriter, r *http.Request) {
 	log.Print("==================== GET BLOCK BY NUMBER ==================")
 
 	// define response
@@ -421,6 +427,7 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	out, err := json.Marshal(res)
 	w.Write(out)
 }
+
 func queryCC(w http.ResponseWriter, r *http.Request) {
 	log.Print("================query cc======================")
 	type response1 struct {
@@ -713,7 +720,7 @@ func UpgradeChainCode(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
-
+// QueryChannels queries the names of all the channels that a peer has joined.
 func getChannels(w http.ResponseWriter, r *http.Request) {
 	log.Print("================ GET CHANNELS ======================")
 
@@ -721,13 +728,20 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 		Success bool
 		Message string
 	}
+
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+	peer := r.Form.Get("peer")
+
 	clientContext := sdk.Context(fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
 	resMgmtClient, err := resmgmt.New(clientContext)
 
 	if err != nil {
 		log.Fatalf("Failed to create new resource management client: %s", err.Error())
 	}
-	ret, err := resMgmtClient.QueryChannels(resmgmt.WithTargetEndpoints("peer0.org1.example.com"))
+	ret, err := resMgmtClient.QueryChannels(resmgmt.WithTargetEndpoints(peer))
 
 	res := response{
 		Success: true,
@@ -759,8 +773,10 @@ func getTransactionByID(w http.ResponseWriter, r *http.Request) {
 		Success bool
 		Message string
 	}
+	txid := vars["transactionID"]
+	channelID := vars["channelID"]
 
-	channelContext := sdk.ChannelContext("mychannel", fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
+	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
 
 	client, err := ledger.New(channelContext)
 	if err != nil {
@@ -770,8 +786,6 @@ func getTransactionByID(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Message: "",
 	}
-	txid := vars["transactionID"]
-	log.Printf("txid:%s", txid)
 	ret, err := client.QueryTransaction(fab.TransactionID(txid))
 	if err != nil {
 		res.Success = false
@@ -783,3 +797,128 @@ func getTransactionByID(w http.ResponseWriter, r *http.Request) {
 	out, err := json.Marshal(res)
 	w.Write(out)
 }
+
+func getBlockByHash(w http.ResponseWriter, r *http.Request) {
+	log.Print("================ GET CHANNEL INFORMATION ======================")
+	// define response
+	type response struct {
+		Success bool
+		Message string
+	}
+	user := "Admin"
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+	channelID := r.Form.Get("channelID")
+
+	org := r.Header.Get("orgName")
+	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(user), fabsdk.WithOrg(org))
+	client, err := ledger.New(channelContext)
+	if err != nil {
+		log.Fatalf("Failed to create new ledger client: %s", err)
+	}
+	blockHash := r.Form.Get("blockhash")
+	block, _ := client.QueryBlockByHash([]byte(blockHash),ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
+
+	ret, err := json.Marshal(block)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(ret)
+}
+
+
+func getBlockByTXID(w http.ResponseWriter, r *http.Request) {
+	log.Print("================ QueryBlockByTxID ======================")
+	// define response
+	type response struct {
+		Success bool
+		Message string
+	}
+	user := "Admin"
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+	channelID := r.Form.Get("channelID")
+
+	org := r.Header.Get("orgName")
+	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(user), fabsdk.WithOrg(org))
+	client, err := ledger.New(channelContext)
+	if err != nil {
+		log.Fatalf("Failed to create new ledger client: %s", err)
+	}
+	vars := mux.Vars(r)
+	txid := vars["transactionID"]
+	block, _ := client.QueryBlockByTxID(fab.TransactionID(txid),ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
+
+	ret, err := json.Marshal(block)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(ret)
+}
+
+func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
+	log.Print("================ getBlockByNumber ======================")
+	// define response
+	type response struct {
+		Success bool
+		Message string
+	}
+	user := "Admin"
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+	channelID := r.Form.Get("channelID")
+	blockID := r.Form.Get("blockID")
+
+	blockNumber,err := strconv.ParseUint(blockID,10,64)
+	if err != nil {
+		panic(err)
+	}
+
+	org := r.Header.Get("orgName")
+	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(user), fabsdk.WithOrg(org))
+	client, err := ledger.New(channelContext)
+	if err != nil {
+		log.Fatalf("Failed to create new ledger client: %s", err)
+	}
+
+	block, _ := client.QueryBlock(blockNumber,ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
+
+	ret, err := json.Marshal(block)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(ret)
+}
+
+func QueryChannelConfig(w http.ResponseWriter, r *http.Request) {
+	log.Print("================ QueryChannelConfig ======================")
+	// define response
+	type response struct {
+		Success bool
+		Message string
+	}
+	user := "Admin"
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+	channelID := r.Form.Get("channelID")
+
+	org := r.Header.Get("orgName")
+	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(user), fabsdk.WithOrg(org))
+	client, err := ledger.New(channelContext)
+	if err != nil {
+		log.Fatalf("Failed to create new ledger client: %s", err)
+	}
+
+	block, _ := client.QueryConfig(ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
+
+	ret, err := json.Marshal(block)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(ret)
+}
+
+//QueryConfigBlock remian
+
+
+
