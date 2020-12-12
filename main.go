@@ -25,16 +25,16 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
-	"github.com/hyperledger/fabric/core/ledger/util"
-	"github.com/hyperledger/fabric/protos/common"
-	"github.com/hyperledger/fabric/protos/utils"
+	"github.com/csquan/fabric-gm/core/ledger/util"
+	"github.com/csquan/fabric-gm/protos/common"
+	"github.com/csquan/fabric-gm/protos/utils"
 
 	"encoding/base64"
 	"fmt"
 
-	"github.com/hyperledger/fabric/core/ledger/util"
-	"github.com/hyperledger/fabric/protos/common"
-	"github.com/hyperledger/fabric/protos/utils"
+	"github.com/csquan/fabric-gm/core/ledger/util"
+	"github.com/csquan/fabric-gm/protos/common"
+	"github.com/csquan/fabric-gm/protos/utils"
 )
 
 const (
