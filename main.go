@@ -8,12 +8,14 @@ import (
 	//"github.com/hyperledger/fabric/protos/discovery"
 	"encoding/json"
 	"fmt"
+
 	//"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
- //	"path/filepath"
+
+	//	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -37,12 +39,13 @@ import (
 	_ "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	_ "github.com/stretchr/testify/assert"
-//	"google.golang.org/grpc"
+
+	//	"google.golang.org/grpc"
 	//"google.golang.org/grpc/credentials"
 	//client "github.com/hyperledger/fabric/discovery/client"
 	//disc "github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/discovery/client"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/hyperledger/fabric-sdk-go/test/integration"
-	ddsc "github.com/hyperledger/fabric-sdk-go/pkg/client/common/discovery/dynamicdiscovery"
 )
 
 const (
@@ -1048,15 +1051,20 @@ func QueryChannelPeers(w http.ResponseWriter, r *http.Request) {
 	peers, err := service.GetPeers()
 	fmt.Print(peers)
 */
+
 	// Create SDK setup for channel client with dynamic selection
-	sdk, err := fabsdk.New(integration.ConfigBackend,
+	sdk, _ := fabsdk.New(integration.ConfigBackend,
 		fabsdk.WithServicePkg(&dynamicDiscoveryProviderFactory{}))
 	defer sdk.Close()
 
-	chProvider := sdk.ChannelContext(testSetup.ChannelID, fabsdk.WithUser(org1User), fabsdk.WithOrg(org1Name))
+	chProvider := sdk.ChannelContext("cargochannel", fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
 	chCtx, err := chProvider()
 
 	discoveryService, err := chCtx.ChannelService().Discovery()
 	peers, err := discoveryService.GetPeers()
 	fmt.Print(peers)
+}
+
+type dynamicDiscoveryProviderFactory struct {
+	defsvc.ProviderFactory
 }
