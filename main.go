@@ -1058,10 +1058,11 @@ func QueryChannelPeers(w http.ResponseWriter, r *http.Request) {
 	defer sdk.Close()
 
 	chProvider := sdk.ChannelContext("cargochannel", fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
-	chCtx, err := chProvider()
-
-	discoveryService, err := chCtx.ChannelService().Discovery()
-	peers, err := discoveryService.GetPeers()
+	fmt.Print("+++++++++++++++++++++++++++++++++++")
+	fmt.Print(chProvider)
+	chCtx, _ := chProvider()
+	discoveryService, _ := chCtx.ChannelService().Discovery()
+	peers,_ := discoveryService.GetPeers()
 	fmt.Print(peers)
 }
 
