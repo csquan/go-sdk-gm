@@ -27,6 +27,10 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
+	//disc "github.com/hyperledger/fabric/discovery/client"
+	disc "github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/discovery/client"
+
+	"google.golang.org/grpc"
 )
 
 const (
@@ -74,6 +78,7 @@ func main() {
 	r.Handle("/blockbyhash", authMiddleware(http.HandlerFunc(getBlockByHash))).Methods("GET")
 	r.Handle("/blockbytxid", authMiddleware(http.HandlerFunc(getBlockByTXID))).Methods("GET")
 	r.Handle("/channelconfig", authMiddleware(http.HandlerFunc(QueryChannelConfig))).Methods("GET")
+	r.Handle("/channelpeers", authMiddleware(http.HandlerFunc(QueryChannelPeers))).Methods("GET")
 	r.Handle("/chaincodes", authMiddleware(http.HandlerFunc(getInstalledChaincodes))).Methods("GET")
 	r.Handle("/channels/{channelName}/chaincodes", authMiddleware(http.HandlerFunc(getInstantiatedChaincodes))).Methods("GET")
 	r.Handle("/channels", authMiddleware(http.HandlerFunc(getChannels))).Methods("GET")
@@ -932,7 +937,7 @@ func QueryChannelConfig(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	channelID := r.Form.Get("channelID")
+ 	channelID := r.Form.Get("channelID")
 
 	org := r.Header.Get("orgName")
 	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(user), fabsdk.WithOrg(org))
@@ -951,4 +956,26 @@ fmt.Print(block)
 //QueryConfigBlock remian
 
 
+func QueryChannelPeers(w http.ResponseWriter, r *http.Request) {
+	log.Print("================ QueryChannelPeers  ======================")
+	// define response
+	type response struct {
+		Success bool
+		Message string
+	}
+	type client struct {
+		*disc.Client
+		*AuthInfo
+//		conn *grpc.ClientConn
+	}
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+	req := disc.NewRequest().AddLocalPeersQuery().OfChannel("cargochannel")
+fmt.Print(req)
+      //res, err := client.Send(context.Background(), req, client.AuthInfo)
 
+	/*returnedPeers, err := res.ForChannel("cargochannel").Peers()
+	fmt.Print(returnedPeers)*/
+}
