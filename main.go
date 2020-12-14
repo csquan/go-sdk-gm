@@ -1,23 +1,22 @@
 package main
 
 import (
-	"context"
-	"crypto/tls"
-	"crypto/x509"
-	"csquan-gihub/fabric/common/util"
-	"csquan-gihub/fabric/protos/discovery"
+	//"context"
+	//"crypto/tls"
+	//"crypto/x509"
+	//"github.com/hyperledger/fabric/common/util"
+	//"github.com/hyperledger/fabric/protos/discovery"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	//"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
-	"path/filepath"
+ //	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
-	"testing"
 	"time"
 
 	//"io/ioutil"
@@ -35,13 +34,15 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client"
+	_ "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-client "github.com/hyperledger/fabric/discovery/client"
-	disc "github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/discovery/client"
+	_ "github.com/stretchr/testify/assert"
+//	"google.golang.org/grpc"
+	//"google.golang.org/grpc/credentials"
+	//client "github.com/hyperledger/fabric/discovery/client"
+	//disc "github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/discovery/client"
+	"github.com/hyperledger/fabric-sdk-go/test/integration"
+	ddsc "github.com/hyperledger/fabric-sdk-go/pkg/client/common/discovery/dynamicdiscovery"
 )
 
 const (
@@ -966,7 +967,7 @@ fmt.Print(block)
 
 //QueryConfigBlock remian
 
-
+/*
 func loadFileOrPanic(file string) []byte {
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -974,27 +975,6 @@ func loadFileOrPanic(file string) []byte {
 	}
 	return b
 }
-
-
-func createConnector(t *testing.T, certificate tls.Certificate, targetPort int) func() (*grpc.ClientConn, error) {
-	caCert := loadFileOrPanic(filepath.Join("testdata", "server", "ca.pem"))
-	tlsConf := &tls.Config{
-		RootCAs:      x509.NewCertPool(),
-		Certificates: []tls.Certificate{certificate},
-	}
-	tlsConf.RootCAs.AppendCertsFromPEM(caCert)
-
-	addr := fmt.Sprintf("localhost:%d", targetPort)
-	return func() (*grpc.ClientConn, error) {
-		conn, err := grpc.Dial(addr, grpc.WithBlock(), grpc.WithTransportCredentials(credentials.NewTLS(tlsConf)))
-		assert.NoError(t, err)
-		if err != nil {
-			panic(err)
-		}
-		return conn, nil
-	}
-}
-
 func createConnector(certificate tls.Certificate, targetPort int) func() (*grpc.ClientConn, error) {
 	caCert := loadFileOrPanic(filepath.Join("testdata", "server", "ca.pem"))
 	tlsConf := &tls.Config{
@@ -1012,7 +992,7 @@ func createConnector(certificate tls.Certificate, targetPort int) func() (*grpc.
 		return conn, nil
 	}
 }
-
+*/
 func QueryChannelPeers(w http.ResponseWriter, r *http.Request) {
 	log.Print("================ QueryChannelPeers  ======================")
 	// define response
@@ -1025,7 +1005,7 @@ func QueryChannelPeers(w http.ResponseWriter, r *http.Request) {
 	//	*AuthInfo
 //		conn *grpc.ClientConn
 	}*/
-	err := r.ParseForm()
+/*	err := r.ParseForm()
 	if err != nil {
 		panic(err)
 	}
@@ -1034,43 +1014,49 @@ func QueryChannelPeers(w http.ResponseWriter, r *http.Request) {
 	)
 	clientCert := loadFileOrPanic(filepath.Join("testdata", "client", "cert.pem"))
 	clientKey := loadFileOrPanic(filepath.Join("testdata", "client", "key.pem"))
-	
+
 	clientTLSCert, err := tls.X509KeyPair(clientCert, clientKey)
-	
+
 	req := disc.NewRequest().AddPeersQuery().OfChannel("cargochannel")
-	connect := createConnector(clientTLSCert, int(port))
+	connect := createConnector(clientTLSCert, "7054")
 
 	signer := func(msg []byte) ([]byte, error) {
 		return msg, nil
 	}
 
 	cl := client.NewClient(connect, signer, signerCacheSize)
-	
 	ctx := context.Background()
 	authInfo := &discovery.AuthInfo{
 		ClientIdentity:    []byte{1, 2, 3},
 		ClientTlsCertHash: util.ComputeSHA256(clientTLSCert.Certificate[0]),
 	}
 	r, err := cl.Send(ctx, req, authInfo)
-	//AddLocalPeersQuery().OfChannel("cargochannel")
 	fmt.Print(req)
 	fmt.Print(r)
-/*
-
-	service, err := NewChannelService(
+	*/
+/*	ctx:=fab.ClientContext()
+	service, err := ddsc.NewChannelService(
 		ctx,
 		mocks.NewMockMembership(),
 		"cargochannel",
 		WithRefreshInterval(500*time.Millisecond),
-		WithResponseTimeout(2*time.Second),	
+		WithResponseTimeout(2*time.Second),
 	)
 
-defer service.Close()
+	defer service.Close()
 
-peers, err := service.GetPeers()
+	peers, err := service.GetPeers()
+	fmt.Print(peers)
 */
-      //res, err := client.Send(context.Background(), req, client.AuthInfo)
+	// Create SDK setup for channel client with dynamic selection
+	sdk, err := fabsdk.New(integration.ConfigBackend,
+		fabsdk.WithServicePkg(&dynamicDiscoveryProviderFactory{}))
+	defer sdk.Close()
 
-	/*returnedPeers, err := res.ForChannel("cargochannel").Peers()
-	fmt.Print(returnedPeers)*/
+	chProvider := sdk.ChannelContext(testSetup.ChannelID, fabsdk.WithUser(org1User), fabsdk.WithOrg(org1Name))
+	chCtx, err := chProvider()
+
+	discoveryService, err := chCtx.ChannelService().Discovery()
+	peers, err := discoveryService.GetPeers()
+	fmt.Print(peers)
 }
