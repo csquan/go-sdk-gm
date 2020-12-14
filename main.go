@@ -1,18 +1,27 @@
 package main
 
 import (
+	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"csquan-gihub/fabric/common/util"
+	"csquan-gihub/fabric/protos/discovery"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
-	"strconv"
-	"time"
+	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
+	"testing"
+	"time"
+
 	//"io/ioutil"
-        //"os/exec"
+	//"os/exec"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -26,11 +35,13 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
-	//disc "github.com/hyperledger/fabric/discovery/client"
-	disc "github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/discovery/client"
-
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+client "github.com/hyperledger/fabric/discovery/client"
+	disc "github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/discovery/client"
 )
 
 const (
@@ -956,6 +967,52 @@ fmt.Print(block)
 //QueryConfigBlock remian
 
 
+func loadFileOrPanic(file string) []byte {
+	b, err := ioutil.ReadFile(file)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+
+func createConnector(t *testing.T, certificate tls.Certificate, targetPort int) func() (*grpc.ClientConn, error) {
+	caCert := loadFileOrPanic(filepath.Join("testdata", "server", "ca.pem"))
+	tlsConf := &tls.Config{
+		RootCAs:      x509.NewCertPool(),
+		Certificates: []tls.Certificate{certificate},
+	}
+	tlsConf.RootCAs.AppendCertsFromPEM(caCert)
+
+	addr := fmt.Sprintf("localhost:%d", targetPort)
+	return func() (*grpc.ClientConn, error) {
+		conn, err := grpc.Dial(addr, grpc.WithBlock(), grpc.WithTransportCredentials(credentials.NewTLS(tlsConf)))
+		assert.NoError(t, err)
+		if err != nil {
+			panic(err)
+		}
+		return conn, nil
+	}
+}
+
+func createConnector(certificate tls.Certificate, targetPort int) func() (*grpc.ClientConn, error) {
+	caCert := loadFileOrPanic(filepath.Join("testdata", "server", "ca.pem"))
+	tlsConf := &tls.Config{
+		RootCAs:      x509.NewCertPool(),
+		Certificates: []tls.Certificate{certificate},
+	}
+	tlsConf.RootCAs.AppendCertsFromPEM(caCert)
+
+	addr := fmt.Sprintf("localhost:%d", targetPort)
+	return func() (*grpc.ClientConn, error) {
+		conn, err := grpc.Dial(addr, grpc.WithBlock(), grpc.WithTransportCredentials(credentials.NewTLS(tlsConf)))
+		if err != nil {
+			panic(err)
+		}
+		return conn, nil
+	}
+}
+
 func QueryChannelPeers(w http.ResponseWriter, r *http.Request) {
 	log.Print("================ QueryChannelPeers  ======================")
 	// define response
@@ -963,17 +1020,55 @@ func QueryChannelPeers(w http.ResponseWriter, r *http.Request) {
 		Success bool
 		Message string
 	}
-	type client struct {
+	/*type client struct {
 		*disc.Client
-		*AuthInfo
+	//	*AuthInfo
 //		conn *grpc.ClientConn
-	}
+	}*/
 	err := r.ParseForm()
 	if err != nil {
 		panic(err)
 	}
-	req := disc.NewRequest().AddLocalPeersQuery().OfChannel("cargochannel")
-fmt.Print(req)
+	const (
+		signerCacheSize uint = 1
+	)
+	clientCert := loadFileOrPanic(filepath.Join("testdata", "client", "cert.pem"))
+	clientKey := loadFileOrPanic(filepath.Join("testdata", "client", "key.pem"))
+	
+	clientTLSCert, err := tls.X509KeyPair(clientCert, clientKey)
+	
+	req := disc.NewRequest().AddPeersQuery().OfChannel("cargochannel")
+	connect := createConnector(clientTLSCert, int(port))
+
+	signer := func(msg []byte) ([]byte, error) {
+		return msg, nil
+	}
+
+	cl := client.NewClient(connect, signer, signerCacheSize)
+	
+	ctx := context.Background()
+	authInfo := &discovery.AuthInfo{
+		ClientIdentity:    []byte{1, 2, 3},
+		ClientTlsCertHash: util.ComputeSHA256(clientTLSCert.Certificate[0]),
+	}
+	r, err := cl.Send(ctx, req, authInfo)
+	//AddLocalPeersQuery().OfChannel("cargochannel")
+	fmt.Print(req)
+	fmt.Print(r)
+/*
+
+	service, err := NewChannelService(
+		ctx,
+		mocks.NewMockMembership(),
+		"cargochannel",
+		WithRefreshInterval(500*time.Millisecond),
+		WithResponseTimeout(2*time.Second),	
+	)
+
+defer service.Close()
+
+peers, err := service.GetPeers()
+*/
       //res, err := client.Send(context.Background(), req, client.AuthInfo)
 
 	/*returnedPeers, err := res.ForChannel("cargochannel").Peers()
