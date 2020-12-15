@@ -47,6 +47,9 @@ import (
 	//disc "github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/discovery/client"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	//"github.com/hyperledger/fabric-sdk-go/test/integration"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/discovery"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/comm"
+	"github.com/hyperledger/fabric-sdk-go/pkg/context"
 )
 
 const (
@@ -59,6 +62,8 @@ const (
 	org1CfgPath = "./config.yaml"
 	peer0Org1   = "peer0.org1.example.com"
 	peer0Org2   = "peer0.org2.example.com"
+	peer0Org3   = "peer0.org3.example.com"
+	peer0Org4   = "peer0.org4.example.com"
 )
 
 var sdk *fabsdk.FabricSDK
@@ -94,7 +99,8 @@ func main() {
 	r.Handle("/blockbyhash", authMiddleware(http.HandlerFunc(getBlockByHash))).Methods("GET")
 	r.Handle("/blockbytxid", authMiddleware(http.HandlerFunc(getBlockByTXID))).Methods("GET")
 	r.Handle("/channelconfig", authMiddleware(http.HandlerFunc(QueryChannelConfig))).Methods("GET")
-	r.Handle("/channelpeers", authMiddleware(http.HandlerFunc(QueryChannelPeers))).Methods("GET")
+	r.Handle("/getpeers", authMiddleware(http.HandlerFunc(GetPeers))).Methods("GET")
+	r.Handle("/ispeerinchannel", authMiddleware(http.HandlerFunc(IsPeerInChannel))).Methods("GET")
 	r.Handle("/chaincodes", authMiddleware(http.HandlerFunc(getInstalledChaincodes))).Methods("GET")
 	r.Handle("/channels/{channelName}/chaincodes", authMiddleware(http.HandlerFunc(getInstantiatedChaincodes))).Methods("GET")
 	r.Handle("/channels", authMiddleware(http.HandlerFunc(getChannels))).Methods("GET")
@@ -971,103 +977,64 @@ fmt.Print(block)
 
 //QueryConfigBlock remian
 
-/*
-func loadFileOrPanic(file string) []byte {
-	b, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	return b
-}
-func createConnector(certificate tls.Certificate, targetPort int) func() (*grpc.ClientConn, error) {
-	caCert := loadFileOrPanic(filepath.Join("testdata", "server", "ca.pem"))
-	tlsConf := &tls.Config{
-		RootCAs:      x509.NewCertPool(),
-		Certificates: []tls.Certificate{certificate},
-	}
-	tlsConf.RootCAs.AppendCertsFromPEM(caCert)
-
-	addr := fmt.Sprintf("localhost:%d", targetPort)
-	return func() (*grpc.ClientConn, error) {
-		conn, err := grpc.Dial(addr, grpc.WithBlock(), grpc.WithTransportCredentials(credentials.NewTLS(tlsConf)))
-		if err != nil {
-			panic(err)
-		}
-		return conn, nil
-	}
-}
-*/
-func QueryChannelPeers(w http.ResponseWriter, r *http.Request) {
-	log.Print("================ QueryChannelPeers  ======================")
-	// define response
+func GetPeers(w http.ResponseWriter, r *http.Request) {
+	log.Print("================ GetPeers  ======================")
 	type response struct {
 		Success bool
 		Message string
 	}
-	/*type client struct {
-		*disc.Client
-	//	*AuthInfo
-//		conn *grpc.ClientConn
-	}*/
-/*	err := r.ParseForm()
+	err := r.ParseForm()
 	if err != nil {
 		panic(err)
 	}
-	const (
-		signerCacheSize uint = 1
-	)
-	clientCert := loadFileOrPanic(filepath.Join("testdata", "client", "cert.pem"))
-	clientKey := loadFileOrPanic(filepath.Join("testdata", "client", "key.pem"))
 
-	clientTLSCert, err := tls.X509KeyPair(clientCert, clientKey)
+	// Create SDK setup for channel client with dynamic selection--panic
+/*	sdk, _ := fabsdk.New(integration.ConfigBackend,
+	fabsdk.WithServicePkg(&dynamicDiscoveryProviderFactory{}))
+	defer sdk.Close()
 
-	req := disc.NewRequest().AddPeersQuery().OfChannel("cargochannel")
-	connect := createConnector(clientTLSCert, "7054")
-
-	signer := func(msg []byte) ([]byte, error) {
-		return msg, nil
-	}
-
-	cl := client.NewClient(connect, signer, signerCacheSize)
-	ctx := context.Background()
-	authInfo := &discovery.AuthInfo{
-		ClientIdentity:    []byte{1, 2, 3},
-		ClientTlsCertHash: util.ComputeSHA256(clientTLSCert.Certificate[0]),
-	}
-	r, err := cl.Send(ctx, req, authInfo)
-	fmt.Print(req)
-	fmt.Print(r)
-	*/
-/*	ctx:=fab.ClientContext()
-	service, err := ddsc.NewChannelService(
-		ctx,
-		mocks.NewMockMembership(),
-		"cargochannel",
-		WithRefreshInterval(500*time.Millisecond),
-		WithResponseTimeout(2*time.Second),
-	)
-
-	defer service.Close()
-
-	peers, err := service.GetPeers()
-	fmt.Print(peers)
-*/
-
-	// Create SDK setup for channel client with dynamic selection
-	//sdk, _ := fabsdk.New(integration.ConfigBackend,
-	//	fabsdk.WithServicePkg(&dynamicDiscoveryProviderFactory{}))
-	//defer sdk.Close()
-
-//	chProvider := sdk.ChannelContext("insurancechannel", fabsdk.WithUser("Admin"), fabsdk.WithOrg("org1"))
-/*	chCtx, _ := chProvider()
+	chProvider := sdk.ChannelContext("insurancechannel", fabsdk.WithUser("Admin"), fabsdk.WithOrg("org1"))
+	chCtx, _ := chProvider()
 	discoveryService, _ := chCtx.ChannelService().Discovery()
 	peers,_:= discoveryService.GetPeers()
-	*/
-	ctxProvider := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg("org4"))
+*/
+	org := r.Form.Get("org")
+	ctxProvider := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg(org))
 	locCtx, _:= contextImpl.NewLocal(ctxProvider)
 	peers, _:= locCtx.LocalDiscoveryService().GetPeers()
 	fmt.Print("<<<<<<<<<<<<<<<<<<<<<<<<got peers>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 	fmt.Print(peers)
+}
+
+func IsPeerInChannel(w http.ResponseWriter, r *http.Request) {
+	log.Print("================ IsPeerInChannel  ======================")
+	type response struct {
+		Success bool
+		Message string
+	}
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+	channelID := r.Form.Get("channelID")
+	peer := r.Form.Get("peer")
+
+	ctxProvider := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg(orgName))
+	ctx, _ := ctxProvider()
+
+	var client *discovery.Client
+	client, _  = discovery.New(ctx)
+	reqCtx, _:= context.NewRequest(ctx, context.WithTimeout(10*time.Second))
+
+	req := discovery.NewRequest().OfChannel(channelID).AddPeersQuery()
+
+	peerCfg1, _:= comm.NetworkPeerConfig(ctx.EndpointConfig(), peer)
+
+	responses, _:= client.Send(reqCtx, req, peerCfg1.PeerConfig)
+	fmt.Print(responses)
+	resp := responses[0]
+	fmt.Print("\n<<<<<<<<<<<<<<<<<<<<<<<<resp>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+	fmt.Print(resp)
 }
 
 type dynamicDiscoveryProviderFactory struct {
