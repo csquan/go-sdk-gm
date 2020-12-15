@@ -38,6 +38,7 @@ import (
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
 	_ "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
+	contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
 	_ "github.com/stretchr/testify/assert"
 
 	//	"google.golang.org/grpc"
@@ -45,11 +46,11 @@ import (
 	//client "github.com/hyperledger/fabric/discovery/client"
 	//disc "github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/discovery/client"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
-	"github.com/hyperledger/fabric-sdk-go/test/integration"
+	//"github.com/hyperledger/fabric-sdk-go/test/integration"
 )
 
 const (
-	orgName        = "Org1"
+	orgName        = "org1"
 	orgAdmin       = "Admin"
 	ordererOrgName = "OrdererOrg"
 )
@@ -757,8 +758,8 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	peer := r.Form.Get("peer")
-
-	clientContext := sdk.Context(fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
+	org := r.Form.Get("org")
+	clientContext := sdk.Context(fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(org))
 	resMgmtClient, err := resmgmt.New(clientContext)
 
 	if err != nil {
@@ -1053,16 +1054,19 @@ func QueryChannelPeers(w http.ResponseWriter, r *http.Request) {
 */
 
 	// Create SDK setup for channel client with dynamic selection
-	sdk, _ := fabsdk.New(integration.ConfigBackend,
-		fabsdk.WithServicePkg(&dynamicDiscoveryProviderFactory{}))
-	defer sdk.Close()
+	//sdk, _ := fabsdk.New(integration.ConfigBackend,
+	//	fabsdk.WithServicePkg(&dynamicDiscoveryProviderFactory{}))
+	//defer sdk.Close()
 
-	chProvider := sdk.ChannelContext("cargochannel", fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
-	fmt.Print("+++++++++++++++++++++++++++++++++++")
-	fmt.Print(chProvider)
-	chCtx, _ := chProvider()
+//	chProvider := sdk.ChannelContext("insurancechannel", fabsdk.WithUser("Admin"), fabsdk.WithOrg("org1"))
+/*	chCtx, _ := chProvider()
 	discoveryService, _ := chCtx.ChannelService().Discovery()
-	peers,_ := discoveryService.GetPeers()
+	peers,_:= discoveryService.GetPeers()
+	*/
+	ctxProvider := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg("org4"))
+	locCtx, _:= contextImpl.NewLocal(ctxProvider)
+	peers, _:= locCtx.LocalDiscoveryService().GetPeers()
+	fmt.Print("<<<<<<<<<<<<<<<<<<<<<<<<got peers>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 	fmt.Print(peers)
 }
 
