@@ -796,43 +796,6 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
-func getTransactionByID(w http.ResponseWriter, r *http.Request) {
-	log.Print("================ GET TRANSACTION BY TRANSACTION_ID ======================")
-
-
-	log.Print(orgName)
-	type response struct {
-		Success bool
-		Message string
-	}
-	err := r.ParseForm()
-	if err != nil {
-		panic(err)
-	}
-	txid := r.Form.Get("transactionID")
- 	channelID := r.Form.Get("channelID")
-	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(orgName))
-
-	client, err := ledger.New(channelContext)
-	if err != nil {
-		log.Fatalf("Failed to create new channel client: %s", err.Error())
-	}
-	res := response{
-		Success: true,
-		Message: "",
-	}
-	ret, err := client.QueryTransaction(fab.TransactionID(txid))
-	if err != nil {
-		res.Success = false
-		res.Message = err.Error()
-		log.Printf("Failed to queryTx : %s", err.Error())
-	} else {
-		res.Message = ret.String()
-	}
-	out, err := json.Marshal(res)
-	w.Write(out)
-}
-
 func getBlockByHash(w http.ResponseWriter, r *http.Request) {
 	log.Print("================ GET BLOCK BY HASH ======================")
 	// define response
@@ -897,6 +860,46 @@ func getBlockByTXID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(ret)
 }
+
+func getTransactionByID(w http.ResponseWriter, r *http.Request) {
+	log.Print("================ getTransactionByID ======================")
+	// define response
+	type response struct {
+		Success bool
+		Message string
+	}
+	user := "Admin"
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+	channelID := r.Form.Get("channelID")
+
+	org := r.Header.Get("orgName")
+	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(user), fabsdk.WithOrg(org))
+	client, err := ledger.New(channelContext)
+	if err != nil {
+		log.Fatalf("Failed to create new ledger client: %s", err)
+	}
+	txid := r.Form.Get("txid") 
+	tx, err := client.QueryTransaction(fab.TransactionID(txid),ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
+
+	res := response{
+		Success: true,
+		Message: "",
+	}
+
+	if err != nil {
+		res.Success = false
+		res.Message = err.Error()
+		log.Printf("Failed to queryTx : %s", err.Error())
+	} else {
+		res.Message = tx.String()
+	}
+	out, err := json.Marshal(res)
+	w.Write(out)
+}
+
 
 func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	log.Print("================ getBlockByNumber ======================")
