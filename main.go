@@ -8,7 +8,9 @@ import (
 	//"github.com/hyperledger/fabric/protos/discovery"
 	"encoding/json"
 	"fmt"
-
+	//"bytes"
+	//"encoding/gob"
+	//"encoding/binary"
 	//"io/ioutil"
 	"log"
 	"math/rand"
@@ -1003,7 +1005,13 @@ func GetPeers(w http.ResponseWriter, r *http.Request) {
 	locCtx, _:= contextImpl.NewLocal(ctxProvider)
 	peers, _:= locCtx.LocalDiscoveryService().GetPeers()
 	fmt.Print("<<<<<<<<<<<<<<<<<<<<<<<<got peers>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-	fmt.Print(peers)
+	for _,peer :=range peers{
+		pos :=strings.Index(peer.URL(), "//")
+		fmt.Print(pos)
+		ret := peer.URL()[pos+2:len(peer.URL())-5]
+		fmt.Printf(ret)
+		fmt.Print("\n")
+	}
 }
 
 func IsPeerInChannel(w http.ResponseWriter, r *http.Request) {
@@ -1033,8 +1041,15 @@ func IsPeerInChannel(w http.ResponseWriter, r *http.Request) {
 	responses, _:= client.Send(reqCtx, req, peerCfg1.PeerConfig)
 	fmt.Print(responses)
 	resp := responses[0]
+	fmt.Print(reflect.TypeOf(resp))
 	fmt.Print("\n<<<<<<<<<<<<<<<<<<<<<<<<resp>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 	fmt.Print(resp)
+	str := fmt.Sprintf("%v", resp)
+	fmt.Println(str)
+	
+	pos :=strings.Index(str, "access denied")
+	fmt.Print(pos)
+	
 }
 
 type dynamicDiscoveryProviderFactory struct {
