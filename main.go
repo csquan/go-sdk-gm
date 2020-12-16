@@ -8,6 +8,7 @@ import (
 	//"github.com/hyperledger/fabric/protos/discovery"
 	"encoding/json"
 	"fmt"
+
 	//"bytes"
 	//"encoding/gob"
 	//"encoding/binary"
@@ -36,11 +37,11 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
+	contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
 	_ "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
-	contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
 	_ "github.com/stretchr/testify/assert"
 
 	//	"google.golang.org/grpc"
@@ -49,9 +50,9 @@ import (
 	//disc "github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/discovery/client"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	//"github.com/hyperledger/fabric-sdk-go/test/integration"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/discovery"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/comm"
 	"github.com/hyperledger/fabric-sdk-go/pkg/context"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/comm"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/discovery"
 )
 
 const (
@@ -1005,13 +1006,29 @@ func GetPeers(w http.ResponseWriter, r *http.Request) {
 	locCtx, _:= contextImpl.NewLocal(ctxProvider)
 	peers, _:= locCtx.LocalDiscoveryService().GetPeers()
 	fmt.Print("<<<<<<<<<<<<<<<<<<<<<<<<got peers>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-	for _,peer :=range peers{
+	/*for _,peer :=range peers{
 		pos :=strings.Index(peer.URL(), "//")
 		fmt.Print(pos)
 		ret := peer.URL()[pos+2:len(peer.URL())-5]
 		fmt.Printf(ret)
 		fmt.Print("\n")
-	}
+	}*/
+
+	peer := peers[0]
+	pos :=strings.Index(peer.URL(), "//")
+	fmt.Print(pos)
+	ret := peer.URL()[pos+2:len(peer.URL())-5]
+	fmt.Printf(ret)
+
+	res := response{
+		Success: true,
+		Message: ret,
+		}
+	
+	ret1, err := json.Marshal(res)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(ret1)
+
 }
 
 func IsPeerInChannel(w http.ResponseWriter, r *http.Request) {
@@ -1047,9 +1064,24 @@ func IsPeerInChannel(w http.ResponseWriter, r *http.Request) {
 	str := fmt.Sprintf("%v", resp)
 	fmt.Println(str)
 	
+	res := response{
+		Success: true,
+		Message: "",
+	}
+	
 	pos :=strings.Index(str, "access denied")
 	fmt.Print(pos)
-	
+
+	if pos>0{
+		res.Success = false
+		res.Message = "not in channel"
+	}else{
+		res.Message = "in channel"
+	}
+
+	ret, err := json.Marshal(res)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(ret)
 }
 
 type dynamicDiscoveryProviderFactory struct {
