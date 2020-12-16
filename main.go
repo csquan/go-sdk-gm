@@ -941,11 +941,15 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("++++++++++++++++++++++++++++++++++++++parse block ret+++++++++++++++++++++++++++++++++++")
 	fmt.Print(buf)*/
-	fmt.Print(block.Data.String())
-	begin := strings.IndexAny(block.Data.String(),"@")
-	fmt.Print(begin)
-	fmt.Println(reflect.TypeOf(block.Data))
-	ret, err := json.Marshal(block.Data)
+	pos := strings.IndexAny(block.Data.String(),"@")
+	txid, err := json.Marshal(block.Data.String()[pos+1:pos+65])
+
+
+	res := response{
+		Success: true,
+		Message: "txid:" + string(txid),
+	}
+	ret, err := json.Marshal(res)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(ret)
 }
