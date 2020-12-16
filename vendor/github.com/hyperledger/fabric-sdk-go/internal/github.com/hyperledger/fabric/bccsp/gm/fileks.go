@@ -73,7 +73,6 @@ type fileBasedKeyStore struct {
 func (ks *fileBasedKeyStore) Init(pwd []byte, path string, readOnly bool) error {
 	// Validate inputs
 	// pwd can be nil
-	fmt.Println("????INIT======")
 	if len(path) == 0 {
 		return errors.New("An invalid KeyStore path provided. Path cannot be an empty string.")
 	}
@@ -115,8 +114,6 @@ func (ks *fileBasedKeyStore) GetKey(ski []byte) (k bccsp.Key, err error) {
 	}
 
 	suffix := ks.getSuffix(hex.EncodeToString(ski))
-	fmt.Println("======suffix======")
-	fmt.Println(suffix)
 	switch suffix {
 	case "key":
 		// Load the key
@@ -201,11 +198,7 @@ func (ks *fileBasedKeyStore) StoreKey(k bccsp.Key) (err error) {
 
 func (ks *fileBasedKeyStore) searchKeystoreForSKI(ski []byte) (k bccsp.Key, err error) {
 
-	fmt.Println(">>>>>>>searchKeystoreForSKI=>>>>>>")
-	fmt.Println(ks.path)
 	files, _ := ioutil.ReadDir(ks.path)
-	fmt.Println(">>>>>>>files=>>>>>>")
-	fmt.Println(files)
 	for _, f := range files {
 		if f.IsDir() {
 			continue
@@ -219,8 +212,6 @@ func (ks *fileBasedKeyStore) searchKeystoreForSKI(ski []byte) (k bccsp.Key, err 
 		if err != nil {
 			continue
 		}
-		fmt.Println(">>>>>>>key=>>>>>>")
-		fmt.Println(key)
 		switch key.(type) {
 		case *sm2.PrivateKey:
 			k = &gmsm2PrivateKey{key.(*sm2.PrivateKey)}
@@ -382,7 +373,6 @@ func (ks *fileBasedKeyStore) loadKey(alias string) ([]byte, error) {
 
 func (ks *fileBasedKeyStore) createKeyStoreIfNotExists() error {
 	// Check keystore directory
-	fmt.Println("?????createKeyStoreIfNotExists======")
 	ksPath := ks.path
 	missing, err := utils.DirMissingOrEmpty(ksPath)
 

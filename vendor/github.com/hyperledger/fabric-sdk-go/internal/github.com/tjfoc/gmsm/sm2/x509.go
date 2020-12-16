@@ -1122,8 +1122,6 @@ var asn1Null = []byte{5, 0}
 
 func parsePublicKey(algo PublicKeyAlgorithm, keyData *publicKeyInfo) (interface{}, error) {
 	asn1Data := keyData.PublicKey.RightAlign()
-	fmt.Println("+++++parsePublicKey algo:+++++")
-	fmt.Println(algo)
 	switch algo {
 	case RSA:
 		// RSA public keys must have a NULL in the parameters
@@ -1193,10 +1191,8 @@ func parsePublicKey(algo PublicKeyAlgorithm, keyData *publicKeyInfo) (interface{
 		if len(rest) != 0 {
 			return nil, errors.New("x509: trailing data after ECDSA parameters")
 		}
-		fmt.Println("+++++ECDSA++++")
 		namedCurve := namedCurveFromOID(*namedCurveOID)
 		if namedCurve == nil {
-			fmt.Println("+++++namedCurveFromOID error++++")
 			return nil, errors.New("x509here1: unsupported elliptic curve")
 		}
 		x, y := elliptic.Unmarshal(namedCurve, asn1Data)
@@ -1208,7 +1204,6 @@ func parsePublicKey(algo PublicKeyAlgorithm, keyData *publicKeyInfo) (interface{
 			X:     x,
 			Y:     y,
 		}
-		fmt.Println("+++++namedCurveFromOID return++++")
 		return pub, nil
 	default:
 		return nil, nil
