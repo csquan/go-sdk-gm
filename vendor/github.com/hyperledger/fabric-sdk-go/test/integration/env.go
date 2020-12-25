@@ -7,7 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package integration
 
 import (
-"os"
+	"os"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/pathvar"
