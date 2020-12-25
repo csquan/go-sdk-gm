@@ -37,7 +37,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
-	//contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
+	contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
 	_ "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client"
@@ -102,7 +102,7 @@ func main() {
 	r.Handle("/blockbyhash", authMiddleware(http.HandlerFunc(getBlockByHash))).Methods("GET")
 	r.Handle("/blockbytxid", authMiddleware(http.HandlerFunc(getBlockByTXID))).Methods("GET")
 	r.Handle("/channelconfig", authMiddleware(http.HandlerFunc(QueryChannelConfig))).Methods("GET")
-	r.Handle("/getpeersofchannel", authMiddleware(http.HandlerFunc(GetPeersOfChannel))).Methods("GET")
+	r.Handle("/getpeers", authMiddleware(http.HandlerFunc(GetPeers))).Methods("GET")
 	r.Handle("/ispeerinchannel", authMiddleware(http.HandlerFunc(IsPeerInChannel))).Methods("GET")
 	r.Handle("/chaincodes", authMiddleware(http.HandlerFunc(getInstalledChaincodes))).Methods("GET")
 	r.Handle("/channels/{channelName}/chaincodes", authMiddleware(http.HandlerFunc(getInstantiatedChaincodes))).Methods("GET")
@@ -987,8 +987,8 @@ fmt.Print(block)
 
 //QueryConfigBlock remian
 
-func GetPeersOfChannel(w http.ResponseWriter, r *http.Request) {
-	log.Print("================ GetPeersOfChannel  ======================")
+func GetPeers(w http.ResponseWriter, r *http.Request) {
+	log.Print("================ GetPeers  ======================")
 	type response struct {
 		Success bool
 		Message string
@@ -997,24 +997,18 @@ func GetPeersOfChannel(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	channelID := r.Form.Get("channelID")
-	org := r.Form.Get("org")
 
-	chProvider := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"), fabsdk.WithOrg(org))
+	// Create SDK setup for channel client with dynamic selection--panic
+/*	sdk, _ := fabsdk.New(integration.ConfigBackend,
+	fabsdk.WithServicePkg(&dynamicDiscoveryProviderFactory{}))
+	defer sdk.Close()
+
+	chProvider := sdk.ChannelContext("insurancechannel", fabsdk.WithUser("Admin"), fabsdk.WithOrg("org1"))
 	chCtx, _ := chProvider()
 	discoveryService, _ := chCtx.ChannelService().Discovery()
-
-	peers1,err:= discoveryService.GetPeers()
-	ret := ""
-	if err == nil{
-		for _,peer1 :=range peers1{
-			fmt.Print(peer1)
-			fmt.Print("\n")
-			ret = ret + peer1.URL()
-		}
-	}
-
-	/*org := r.Form.Get("org")
+	peers,_:= discoveryService.GetPeers()
+*/
+	org := r.Form.Get("org")
 	ctxProvider := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg(org))
 	locCtx, _:= contextImpl.NewLocal(ctxProvider)
 	peers, _:= locCtx.LocalDiscoveryService().GetPeers()
@@ -1025,19 +1019,19 @@ func GetPeersOfChannel(w http.ResponseWriter, r *http.Request) {
 		ret := peer.URL()[pos+2:len(peer.URL())-5]
 		fmt.Printf(ret)
 		fmt.Print("\n")
-	}
+	}*/
 
 	peer := peers[0]
 	pos :=strings.Index(peer.URL(), "//")
 	fmt.Print(pos)
 	ret := peer.URL()[pos+2:len(peer.URL())-5]
 	fmt.Printf(ret)
-	*/
+
 	res := response{
 		Success: true,
 		Message: ret,
 		}
-
+	
 	ret1, err := json.Marshal(res)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(ret1)
