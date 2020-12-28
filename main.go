@@ -877,17 +877,25 @@ func getTransactionByID(w http.ResponseWriter, r *http.Request) {
 
 	org := r.Header.Get("orgName")
 	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(user), fabsdk.WithOrg(org))
-	client, err := ledger.New(channelContext)
-	if err != nil {
-		log.Fatalf("Failed to create new ledger client: %s", err)
-	}
-	txid := r.Form.Get("txid") 
-	tx, err := client.QueryTransaction(fab.TransactionID(txid),ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
 
 	res := response{
 		Success: true,
 		Message: "",
 	}
+
+	client, err := ledger.New(channelContext)
+	if err != nil {
+		log.Print("Failed to create new ledger client: %s", err)
+		res.Success = false
+		res.Message = err.Error()
+
+		out1, _ := json.Marshal(res)
+		w.Write(out1)
+		return
+	}
+	txid := r.Form.Get("txid") 
+	tx, err := client.QueryTransaction(fab.TransactionID(txid),ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
+
 
 	if err != nil {
 		res.Success = false
@@ -908,6 +916,11 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 		Success bool
 		Message string
 	}
+	res := response{
+		Success: true,
+		Message: "",
+	}
+
 	user := "Admin"
 	err := r.ParseForm()
 	if err != nil {
@@ -925,7 +938,13 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(user), fabsdk.WithOrg(org))
 	client, err := ledger.New(channelContext)
 	if err != nil {
-		log.Fatalf("Failed to create new ledger client: %s", err)
+		log.Print("Failed to create new ledger client: %s", err)
+		res.Success = false
+		res.Message = err.Error()
+
+		out1, _ := json.Marshal(res)
+		w.Write(out1)
+		return
 	}
 
 	block, _ := client.QueryBlock(blockNumber,ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
@@ -948,10 +967,9 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	txid, err := json.Marshal(block.Data.String()[pos+1:pos+65])
 
 
-	res := response{
-		Success: true,
-		Message: "txid:" + string(txid),
-	}
+	res.Success = true
+	res.Message = "txid:" + string(txid)
+
 	ret, err := json.Marshal(res)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(ret)
