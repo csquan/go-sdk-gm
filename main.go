@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 	"encoding/base64"
-	"io/ioutil"
+	//"io/ioutil"
 
 	//"io/ioutil"
 	//"os/exec"
@@ -39,7 +39,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
-	contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
+	//contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
 	_ "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client"
@@ -987,9 +987,9 @@ func handleBlock(block * common.Block) {
     }
 
     filename := fmt.Sprintf("block%d.block", block.GetHeader().Number)
-    if err := ioutil.WriteFile(filename, b, 0644); err != nil {
+    /*if err := ioutil.WriteFile(filename, b, 0644); err != nil {
         fmt.Printf("ERROR: Cannot write block to file:[%s], error=[%v]\n", filename, err)
-    }
+    }*/
 
     // Then you could use utility to read block content, like:
     // $ configtxlator proto_decode --input block0.block --type common.Block
@@ -1110,17 +1110,13 @@ func GetPeers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create SDK setup for channel client with dynamic selection--panic
-/*	sdk, _ := fabsdk.New(integration.ConfigBackend,
-	fabsdk.WithServicePkg(&dynamicDiscoveryProviderFactory{}))
-	defer sdk.Close()
 
-	chProvider := sdk.ChannelContext("insurancechannel", fabsdk.WithUser("Admin"), fabsdk.WithOrg("org1"))
-	chCtx, _ := chProvider()
-	discoveryService, _ := chCtx.ChannelService().Discovery()
-	peers,_:= discoveryService.GetPeers()
-*/
+	channelID := r.Form.Get("channelID")
 	org := r.Form.Get("org")
 
+	chProvider := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"), fabsdk.WithOrg(org))
+	chCtx, _ := chProvider()
+	discoveryService, _ := chCtx.ChannelService().Discovery()
 	peers1,err:= discoveryService.GetPeers()
 	ret := ""
 	if err == nil{
