@@ -23,6 +23,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"encoding/base64"
+	"io/ioutil"
 
 	//"io/ioutil"
 	//"os/exec"
@@ -53,6 +55,13 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/comm"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/discovery"
+
+	//"github.com/golang/protobuf/proto"
+	"github.com/hyperledger/fabric-protos-go/common"
+	lutil "github.com/hyperledger/fabric/common/ledger/util"
+	//putil "github.com/hyperledger/fabric/protos/utils"
+	putil "github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/protoutil"
+	"github.com/golang/protobuf/proto"
 )
 
 const (
@@ -602,7 +611,7 @@ func InstallChainCode(w http.ResponseWriter, r *http.Request) {
 		Success bool
 		Message string
 	}
-	ccPkg, err := packager.NewCCPackage(install.Path, "/root/go")
+	ccPkg, err := packager.NewCCPackage(install.Path, "/root/gowork")
 	if err != nil {
 		log.Fatalf("pack chaincode error %s", err.Error())
 	}
@@ -829,7 +838,12 @@ func getBlockByHash(w http.ResponseWriter, r *http.Request) {
 	w.Write(ret)
 }
 
-
+// GetPayload Get Payload from Envelope message
+func GetPayload(e *common.Envelope) (*common.Payload, error) {
+	payload := &common.Payload{}
+	_ = proto.Unmarshal(e.Payload, payload)
+	return payload, nil
+}
 
 func getBlockByTXID(w http.ResponseWriter, r *http.Request) {
 	log.Print("================ QueryBlockByTxID ======================")
@@ -908,6 +922,82 @@ func getTransactionByID(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
+func extractData(buf *lutil.Buffer) (*common.BlockData, error) {
+    data := &common.BlockData{}
+    var numItems uint64
+    var err error
+
+    if numItems, err = buf.DecodeVarint(); err != nil {
+        return nil, err
+    }
+    for i := uint64(0); i < numItems; i++ {
+        var txEnvBytes []byte
+        if txEnvBytes, err = buf.DecodeRawBytes(false); err != nil {
+            return nil, err
+        }
+        data.Data = append(data.Data, txEnvBytes)
+    }
+    return data, nil
+}
+
+func extractTxID(txEnvelopBytes []byte) (string, error) {
+    txEnvelope, err := putil.GetEnvelopeFromBlock(txEnvelopBytes)
+    if err != nil {
+        return "", err
+    }
+    txPayload, err := GetPayload(txEnvelope)
+    if err != nil {
+        return "", nil
+    }
+    chdr, err := putil.UnmarshalChannelHeader(txPayload.Header.ChannelHeader)
+    if err != nil {
+        return "", err
+    }
+    return chdr.TxId, nil
+}
+
+
+// Parse a block
+func handleBlock(block * common.Block) {
+    fmt.Printf("Block: Number=[%d], CurrentBlockHash=[%s], PreviousBlockHash=[%s]\n",
+        block.GetHeader().Number,
+        base64.StdEncoding.EncodeToString(block.GetHeader().DataHash),
+        base64.StdEncoding.EncodeToString(block.GetHeader().PreviousHash))
+
+    if putil.IsConfigBlock(block) {
+        fmt.Printf("    txid=CONFIGBLOCK\n")
+    } else {
+        for _, txEnvBytes := range block.GetData().GetData() {
+		fmt.Print("+++++++++++++")
+		fmt.Print(block.GetData())
+            if txid, err := extractTxID(txEnvBytes); err != nil {
+                fmt.Printf("ERROR: Cannot extract txid, error=[%v]\n", err)
+                return
+            } else {
+                fmt.Printf("  handleBlock get txid=%s\n", txid)
+            }
+        }
+    }
+
+    // write block to file
+    b, err := proto.Marshal(block)
+    if err != nil {
+        fmt.Printf("ERROR: Cannot marshal block, error=[%v]\n", err)
+        return
+    }
+
+    filename := fmt.Sprintf("block%d.block", block.GetHeader().Number)
+    if err := ioutil.WriteFile(filename, b, 0644); err != nil {
+        fmt.Printf("ERROR: Cannot write block to file:[%s], error=[%v]\n", filename, err)
+    }
+
+    // Then you could use utility to read block content, like:
+    // $ configtxlator proto_decode --input block0.block --type common.Block
+}
+
+
+
+
 
 func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	log.Print("================ getBlockByNumber ======================")
@@ -949,6 +1039,9 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 
 	block, _ := client.QueryBlock(blockNumber,ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
 
+	fmt.Print(block)
+
+	handleBlock(block)
 	//write block to file,use configtxlator to parse ,get useful info 
 
 	//ret1, err := json.Marshal(block)
@@ -1027,6 +1120,18 @@ func GetPeers(w http.ResponseWriter, r *http.Request) {
 	peers,_:= discoveryService.GetPeers()
 */
 	org := r.Form.Get("org")
+
+	peers1,err:= discoveryService.GetPeers()
+	ret := ""
+	if err == nil{
+		for _,peer1 :=range peers1{
+			fmt.Print(peer1)
+			fmt.Print("\n")
+			ret = ret + peer1.URL()
+		}
+	}
+
+	/*org := r.Form.Get("org")
 	ctxProvider := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg(org))
 	locCtx, _:= contextImpl.NewLocal(ctxProvider)
 	peers, _:= locCtx.LocalDiscoveryService().GetPeers()
@@ -1037,19 +1142,18 @@ func GetPeers(w http.ResponseWriter, r *http.Request) {
 		ret := peer.URL()[pos+2:len(peer.URL())-5]
 		fmt.Printf(ret)
 		fmt.Print("\n")
-	}*/
+	}
 
 	peer := peers[0]
 	pos :=strings.Index(peer.URL(), "//")
 	fmt.Print(pos)
 	ret := peer.URL()[pos+2:len(peer.URL())-5]
 	fmt.Printf(ret)
-
+	*/
 	res := response{
 		Success: true,
 		Message: ret,
 		}
-	
 	ret1, err := json.Marshal(res)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(ret1)
