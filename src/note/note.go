@@ -20,7 +20,6 @@ package main
 import (
 	"fmt"
 	"encoding/json"
-	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -101,7 +100,7 @@ func (s *SimpleChaincode) modifyNote(stub shim.ChaincodeStubInterface,args []str
 
 	note := Note{}
 
-	err = json.Unmarshal(Notebytes,&note)
+	err = json.Unmarshal(notebytes,&note)
 
         if err != nil {
 		return shim.Error(err.Error())
