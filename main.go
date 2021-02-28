@@ -611,7 +611,7 @@ func InstallChainCode(w http.ResponseWriter, r *http.Request) {
 		Success bool
 		Message string
 	}
-	ccPkg, err := packager.NewCCPackage(install.Path, "/root/gowork")
+	ccPkg, err := packager.NewCCPackage(install.Path, "/root/go")
 	if err != nil {
 		log.Fatalf("pack chaincode error %s", err.Error())
 	}
@@ -980,13 +980,13 @@ func handleBlock(block * common.Block) {
     }
 
     // write block to file
-    b, err := proto.Marshal(block)
+    _, err := proto.Marshal(block)
     if err != nil {
         fmt.Printf("ERROR: Cannot marshal block, error=[%v]\n", err)
         return
     }
 
-    filename := fmt.Sprintf("block%d.block", block.GetHeader().Number)
+    //filename := fmt.Sprintf("block%d.block", block.GetHeader().Number)
     /*if err := ioutil.WriteFile(filename, b, 0644); err != nil {
         fmt.Printf("ERROR: Cannot write block to file:[%s], error=[%v]\n", filename, err)
     }*/
