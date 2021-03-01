@@ -77,7 +77,7 @@ func (t *SimpleChaincode) createNote(stub shim.ChaincodeStubInterface, args []st
 
 	var note = Note{NoteID: args[0],NoteHash: args[1],CipperText: args[2]}
 
-        noteAsBytes, _ := json.Marshal(cargo)
+        noteAsBytes, _ := json.Marshal(note)
 
 	err = stub.PutState(args[0], noteAsBytes)
 	if err != nil {
