@@ -55,7 +55,7 @@ setChaincodePath
 echo "POST request Enroll on Org1  ..."
 echo
 ORG1_TOKEN=$(curl -s -X GET \
-  "http://localhost:4000/users?username=jim&orgName=org1&secret=123")
+  "http://localhost:4000/users?username=jim1&orgName=org1&secret=123")
 echo $ORG1_TOKEN
 ORG1_TOKEN=$(echo $ORG1_TOKEN | jq ".Token" | sed "s/\"//g")
 echo
@@ -108,8 +108,8 @@ curl -s -X POST \
   -H "authorization:$ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d "{
-	\"name\":\"insurance\",
-	\"path\":\"github.com/insurance\",
+	\"name\":\"pingan\",
+	\"path\":\"github.com/pingan\",
 	\"version\":\"v0\",
 	\"org\":\"org1\",
 	\"user\":\"jim\"
@@ -124,27 +124,11 @@ curl -s -X POST \
   -H "authorization:$ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d "{
-	\"name\":\"insurance\",
-	\"path\":\"github.com/insurance\",
+	\"name\":\"pingan\",
+	\"path\":\"github.com/pingan\",
 	\"version\":\"v0\",
 	\"org\":\"org2\",
 	\"user\":\"barry\"
-}"
-echo
-echo
-
-echo "POST Install chaincode on peer0.Org3"
-echo
-curl -s -X POST \
-  http://localhost:4000/channels/mychannel/installchaincodes?peer="peer0.org3.example.com" \
-  -H "authorization:$ORG1_TOKEN" \
-  -H "content-type: application/json" \
-  -d "{
-    \"name\":\"insurance\",
-    \"path\":\"github.com/insurance\",
-    \"version\":\"v0\",
-    \"org\":\"org3\",
-    \"user\":\"jack\"
 }"
 echo
 echo
@@ -158,7 +142,7 @@ curl -s -X POST \
   -H "content-type: application/json" \
   -d "{
         \"channelID\":\"mychannel\",
-	\"name\":\"insurance\",
+	\"name\":\"pingan\",
 	\"version\":\"v0\",
 	\"path\":\"github.com/go\",
 	\"args\":[]
@@ -169,14 +153,13 @@ echo
 echo "POST invoke chaincode on peers of Org1 and Org2"
 echo
 TX_INFO=$(curl -s -X POST \
-  http://localhost:4000/channels/mychannel/invokechaincodes/insurance \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
   -H "authorization:$ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d "{
         \"channelID\":\"mychannel\",
 	\"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
-	\"fcn\":\"createInsurance\",
-	\"args\":[\"InsuranceNum001\",\"OrderNum001\",\"Shipper001\",\"Carrier\",\"aisio\",\"TV\",\"200\",\"20000\",\"4000\",\"1\"]
-}")
+	\"fcn\":\"PersonalRegister\",
+	\"args\":[\"orderid001\",\"user001\",\"secoouserxxx\",\"13588888888\",\"0\",\"0\",\"CertNo001\",\"xxx@163.com\",\"remark\",\"acctno001\",\"merchaintid001\",\"2020-11-18\",\"2020-11-19\"]}")
 echo $TX_INFO
 echo "Total execution time : $(($(date +%s)-starttime)) secs ..."

@@ -55,51 +55,22 @@ setChaincodePath
 echo "POST request Enroll on Org1  ..."
 echo
 ORG1_TOKEN=$(curl -s -X GET \
-	  "http://localhost:4000/users?username=jim&orgName=org1&secret=123")
+  "http://localhost:4000/users?username=jim&orgName=org1&secret=123")
 echo $ORG1_TOKEN
 ORG1_TOKEN=$(echo $ORG1_TOKEN | jq ".Token" | sed "s/\"//g")
 echo
 echo "ORG1 token is $ORG1_TOKEN"
 echo
-
-echo "GET query Block by blockNumber"
+echo "POST invoke chaincode on peers of Org1 and Org2"
 echo
-BLOCK_INFO=$(curl -s -X GET \
-	  "http://localhost:4000/channels/mychannel/blocks?peer=peer0.org1.example.com&channelID=mychannel&blockID=4" \
-	   -H "authorization:$ORG1_TOKEN" \
-	   -H "content-type: application/json")
-echo $BLOCK_INFO
-
-#echo "GET query Transaction by TransactionID"
-#echo $TRX_ID
-#curl -s -X GET http://localhost:4000/channels/mychannel/transactions/$TRX_ID?peer=peer0.org1.example.com \
-#  -H "authorization:$ORG1_TOKEN" \
-#  -H "content-type: application/json"
-#echo
-#echo
-
-
-
-echo "GET query ChainInfo"
-echo
-curl -s -X GET \
-  "http://localhost:4000/channels/mychannel?peer=peer0.org1.example.com&channelID=mychannel" \
+TX_INFO=$(curl -s -X POST \
+  http://localhost:4000/channels/mychannel/invokechaincodes/pingan \
   -H "authorization:$ORG1_TOKEN" \
-  -H "content-type: application/json"
-echo
-echo
-
-echo
-
-echo "GET query Channels"
-echo
-curl -s -X GET \
-  "http://localhost:4000/channels?peer=peer0.org1.example.com&org=org1" \
-  -H "authorization:$ORG1_TOKEN" \
-  -H "content-type: application/json"
-echo
-echo
-
-
+  -H "content-type: application/json" \
+  -d "{
+        \"channelID\":\"mychannel\",
+	\"peers\": [\"peer0.org1.example.com\",\"peer0.org2.example.com\"],
+	\"fcn\":\"PersonalRegister\",
+	\"args\":[\"orderid001\",\"user001\",\"secoouserxxx\",\"13588888888\",\"0\",\"0\",\"CertNo001\",\"xxx@163.com\",\"remark\",\"acctno001\",\"merchaintid001\",\"2020-11-18\",\"2020-11-19\"]}")
+echo $TX_INFO
 echo "Total execution time : $(($(date +%s)-starttime)) secs ..."
-

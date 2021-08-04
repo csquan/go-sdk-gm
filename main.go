@@ -19,11 +19,11 @@ import (
 	"os"
 
 	//	"path/filepath"
+	"encoding/base64"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
-	"encoding/base64"
 	//"io/ioutil"
 
 	//"io/ioutil"
@@ -60,8 +60,13 @@ import (
 	"github.com/hyperledger/fabric-protos-go/common"
 	lutil "github.com/hyperledger/fabric/common/ledger/util"
 	//putil "github.com/hyperledger/fabric/protos/utils"
-	putil "github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/protoutil"
 	"github.com/golang/protobuf/proto"
+	putil "github.com/hyperledger/fabric-sdk-go/internal2/github.com/hyperledger/fabric/protoutil"
+
+	"database/sql"
+
+	"github.com/golang/protobuf/ptypes"
+	_ "github.com/lib/pq"
 )
 
 const (
@@ -78,9 +83,83 @@ const (
 	peer0Org4   = "peer0.org4.example.com"
 )
 
+var channel_genesis_hash = "573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808"
+
 var sdk *fabsdk.FabricSDK
 
+var db *sql.DB
+
+func checkErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func sqlOpen() {
+	var err error
+
+	db, err = sql.Open("postgres", "port=5432 user=hppoc password=password dbname=fabricexplorer sslmode=disable")
+	checkErr(err)
+}
+
+func txSqlInsert(blockid uint64,txhash string, createdt string, chaincodename string, channel_genesis_hash string) {
+	//插入数据
+	stmt, err := db.Prepare("INSERT INTO transactions(blockid,txhash,createdt,chaincodename,channel_genesis_hash) VALUES($1,$2,$3,$4,$5) RETURNING id")
+	checkErr(err)
+	res, err := stmt.Exec(blockid,txhash, createdt, chaincodename, channel_genesis_hash)
+	checkErr(err)
+
+	affect, err := res.RowsAffected()
+	checkErr(err)
+	fmt.Println("rows affect:", affect)
+}
+
+func blocksSqlInsert(blocknum int, txcount int, createdt string, prev_blockhash string, blockhash string, channel_genesis_hash string) {
+	stmt, err := db.Prepare("INSERT INTO blocks(blocknum,txcount, createdt,prev_blockhash,blockhash,channel_genesis_hash) VALUES($1,$2,$3,$4,$5,$6) RETURNING id")
+	checkErr(err)
+
+	fmt.Printf(string(txcount))
+	res, err := stmt.Exec(blocknum, txcount, createdt, prev_blockhash, blockhash, channel_genesis_hash)
+	checkErr(err)
+
+	affect, err := res.RowsAffected()
+	checkErr(err)
+	fmt.Println("rows affect:", affect)
+}
+
+func blocksSqlUpdate(blocknum int, txcount int){
+     //更新数据
+     stmt, err := db.Prepare("update blocks set txcount=$1 where blocknum=$2")
+     checkErr(err)
+
+     res, err := stmt.Exec(txcount, blocknum)
+     checkErr(err)
+
+     affect, err := res.RowsAffected()
+     checkErr(err)
+
+     fmt.Println(affect)
+}
+
+func blocksSqlSelect() (int,int){
+	//查询数据
+	rows, err := db.Query("SELECT blocknum ,txcount FROM blocks order by blocknum desc;")
+	checkErr(err)
+
+	for rows.Next() {
+		var blocknum int
+		var txcount int
+		err = rows.Scan(&blocknum,&txcount)
+		checkErr(err)
+		return blocknum,txcount
+	}
+	return -1,-1
+}
+
+
 func main() {
+
+	sqlOpen()
 
 	//here have a trap of comma,use sdk1 to solve
 	sdk1, err := fabsdk.New(config.FromFile(org1CfgPath))
@@ -115,8 +194,35 @@ func main() {
 	r.Handle("/ispeerinchannel", authMiddleware(http.HandlerFunc(IsPeerInChannel))).Methods("GET")
 	r.Handle("/chaincodes", authMiddleware(http.HandlerFunc(getInstalledChaincodes))).Methods("GET")
 	r.Handle("/channels/{channelName}/chaincodes", authMiddleware(http.HandlerFunc(getInstantiatedChaincodes))).Methods("GET")
-	r.Handle("/channels", authMiddleware(http.HandlerFunc(getChannels))).Methods("GET")
+	r.Handle("/channels", http.HandlerFunc(getChannels)).Methods("GET")
+	syncBlocks()
 	http.ListenAndServe(":4000", handlers.LoggingHandler(os.Stdout, r))
+}
+
+func syncBlocks() {
+	height := getblocksHeight("mychannel", "org1")
+
+	dbblocks,_ := blocksSqlSelect()
+
+	fmt.Print("\n blocknetwork height:")
+	fmt.Print(height)
+	fmt.Print("\n db height:")
+	fmt.Print(dbblocks)
+
+	start := 0
+	max   := 0
+	if(int(height) > dbblocks){
+            start = dbblocks+1
+	    max = int(height)
+	}else if(int(height) < dbblocks){
+	    start = int(height)
+	    max = dbblocks
+	}
+	fmt.Print("\n sync history blocks from %d to %d",start,max)
+
+	for ; start <= int(height); start++ {
+		handleBlockByNumber("mychannel","pingan",uint64(start))
+	}
 }
 
 func authMiddleware(next http.Handler) http.Handler {
@@ -187,7 +293,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 			"exp":      time.Now().Unix() + 360000,
 		})
 		tokenString, err := token.SignedString([]byte(secret))
-		ctxProvider := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg(org))
+		ctxProvider := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg("org1"))
 		if ctxProvider == nil {
 			log.Fatalf("failed to create ctxProvider")
 		}
@@ -232,11 +338,11 @@ func login(w http.ResponseWriter, r *http.Request) {
 		}
 		err = msp.Enroll(user, mspclient.WithSecret("123"))
 		res := response{Success: true, Message: "success to enroll user"}
-		if err != nil {
+		/*if err != nil {
 			log.Printf("enroll err：%s", err.Error())
 			res.Success = false
 			res.Message = err.Error()
-		}
+		}*/
 		res.Token = tokenString
 		out, err := json.Marshal(res)
 		w.Header().Set("Content-Type", "application/json")
@@ -244,6 +350,22 @@ func login(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}
+}
+
+func getblocksHeight(channelID string, orgName string) int64 {
+
+	user := "Admin"
+
+	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(user), fabsdk.WithOrg(orgName))
+	client, err := ledger.New(channelContext)
+	if err != nil {
+		log.Fatalf("Failed to create new ledger client: %s", err)
+		return 0
+	}
+
+	blockchainInfo, _ := client.QueryInfo(ledger.WithTargetEndpoints("peer0.org1.example.com"))
+
+	return int64(blockchainInfo.BCI.Height)
 }
 
 func getChainInfo(w http.ResponseWriter, r *http.Request) {
@@ -359,11 +481,12 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 		Path string
 		Org  string
 	}
-
+	log.Print(r)
 	decoder := json.NewDecoder(r.Body)
 	channel := channelConfig{}
 	decoder.Decode(&channel)
-	clientContext := sdk.Context(fabsdk.WithUser(orgAdmin), fabsdk.WithOrg(ordererOrgName))
+	log.Print(channel)
+	clientContext := sdk.Context(fabsdk.WithUser(orgAdmin), fabsdk.WithOrg("org1"))
 
 	// Resource management client is responsible for managing channels (create/update channel)
 	// Supply user that has privileges to create channel (in this case orderer admin)
@@ -401,7 +524,7 @@ func joinChannel(w http.ResponseWriter, r *http.Request) {
 	}
 	type joinConfig struct {
 		ChannelID string
-		Org string
+		Org       string
 	}
 	decoder := json.NewDecoder(r.Body)
 	join := joinConfig{}
@@ -416,7 +539,7 @@ func joinChannel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Org peers join channel
-	err = orgResMgmt.JoinChannel(join.ChannelID, resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com"));
+	err = orgResMgmt.JoinChannel(join.ChannelID, resmgmt.WithRetry(retry.DefaultResMgmtOpts), resmgmt.WithOrdererEndpoint("orderer.example.com"))
 
 	res := response{
 		Success: true,
@@ -481,7 +604,7 @@ func queryCC(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-        channelID := r.Form.Get("channelID")
+	channelID := r.Form.Get("channelID")
 	ccp := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"))
 	cc, err := channel.New(ccp)
 	if err != nil {
@@ -524,15 +647,17 @@ func invokeCC(w http.ResponseWriter, r *http.Request) {
 
 	type invokeConfig struct {
 		ChannelID string
-		Peers  []string
-		Fcn    string
-		Args   []string
+		Peers     []string
+		Fcn       string
+		Args      []string
 	}
-
+	channel_genesis_hash := "573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808"
 	decoder := json.NewDecoder(r.Body)
 	invoke := invokeConfig{}
 	decoder.Decode(&invoke)
 
+	log.Print(invoke)
+	log.Print(invoke.ChannelID)
 	vars := mux.Vars(r)
 
 	ccp := sdk.ChannelContext(invoke.ChannelID, fabsdk.WithUser("Admin"))
@@ -543,7 +668,6 @@ func invokeCC(w http.ResponseWriter, r *http.Request) {
 
 	args := packArgs(invoke.Args)
 
-
 	req := channel.Request{
 		ChaincodeID: vars["chaincodeName"],
 		Fcn:         invoke.Fcn,
@@ -551,12 +675,16 @@ func invokeCC(w http.ResponseWriter, r *http.Request) {
 	}
 	peers := []string{peer0Org1}
 	reqPeers := channel.WithTargetEndpoints(peers...)
+
+	t := time.Now()
+	str := t.Format("2006-01-02 15:04:05")
+
 	response, err := cc.Execute(req, reqPeers)
 
 	res := response1{
 		Success: true,
 		Message: "",
-		TxID:"",
+		TxID:    "",
 	}
 	if err != nil {
 		res.Success = false
@@ -564,17 +692,36 @@ func invokeCC(w http.ResponseWriter, r *http.Request) {
 		log.Printf("failed to Execute chaincode: %s\n", err.Error())
 	} else {
 		log.Print("+++++++++++++++response++++++++++++++")
-		log.Print(string(response.Payload))
 		res.Message = string(response.Payload)
 		res.TxID = string(response.TransactionID)
+
+		block :=queryBlockByTXID("mychannel", res.TxID)
+		txSqlInsert(block.Header.Number,res.TxID, str, vars["chaincodeName"], channel_genesis_hash)
+
+		dbheight,txCount := blocksSqlSelect()
+		fmt.Print("++++++++++++height and txCountin db++++++++++++")
+		fmt.Print(dbheight)
+		fmt.Print(txCount)
+
+		blockheight := int(block.Header.Number)
+
+
+		if(blockheight > dbheight){
+			blocksSqlInsert(blockheight, 1, str, base64.StdEncoding.EncodeToString(block.Header.PreviousHash), base64.StdEncoding.EncodeToString(block.Header.DataHash), channel_genesis_hash)
+		}else if(blockheight == dbheight){
+                        blocksSqlUpdate(blockheight,txCount+1) 
+		}else{
+		     fmt.Print("####################error blockheight and dbheight#####################\n")
+		     fmt.Print("blockheight and dbheight \n")
+		     fmt.Print(blockheight)
+		     fmt.Print(dbheight)
+		}
 	}
 	log.Printf("Execute chaincode success,txId:%s\n", response.TransactionID)
 	fmt.Println(res)
 	out, err := json.Marshal(res)
 	w.Write(out)
 }
-
-
 
 func packArgs(paras []string) [][]byte {
 	var args [][]byte
@@ -658,15 +805,14 @@ func InstantiateChainCode(w http.ResponseWriter, r *http.Request) {
 
 	type instantiateConfig struct {
 		ChannelID string
-		Name    string
-		Version string
-		Path    string
-		Args    []string
+		Name      string
+		Version   string
+		Path      string
+		Args      []string
 	}
 	decoder := json.NewDecoder(r.Body)
 	instantiate := instantiateConfig{}
 	decoder.Decode(&instantiate)
-
 
 	ccPolicy := cauthdsl.SignedByMspMember("Org1MSP")
 
@@ -715,10 +861,10 @@ func UpgradeChainCode(w http.ResponseWriter, r *http.Request) {
 
 	type upgradeConfig struct {
 		ChannelID string
-		Name    string
-		Version string
-		Path    string
-		Args    string
+		Name      string
+		Version   string
+		Path      string
+		Args      string
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -729,7 +875,6 @@ func UpgradeChainCode(w http.ResponseWriter, r *http.Request) {
 	log.Print(upgrade)
 
 	ccPolicy := cauthdsl.SignedByMspMember("Org1MSP")
-
 
 	req := resmgmt.UpgradeCCRequest{
 		Name:    upgrade.Name,
@@ -792,16 +937,17 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 
 	if err == nil {
 		log.Print("================ GET CHANNELS SUCCESS ======================")
-		out, err1 := json.Marshal(ret)
+		/*out, err1 := json.Marshal(ret)
 		if err1 == nil {
 			res.Message = string(out[:])
-		}
+		}*/
 	} else {
 		res.Success = false
 		res.Message = err.Error()
 	}
 	w.Header().Set("Content-Type", "application/json")
-	out, err := json.Marshal(res)
+	//out, err := json.Marshal(res)
+	out, err := json.Marshal(ret)
 	w.Write(out)
 }
 
@@ -827,7 +973,7 @@ func getBlockByHash(w http.ResponseWriter, r *http.Request) {
 	}
 	blockHash := r.Form.Get("blockhash")
 	blockHash = "yzHpSOo7Yb7NHP8BTQs6dLueutDqC4VtEfcO90+Nn80"
-	block, _ := client.QueryBlockByHash([]byte(blockHash),ledger.WithTargetEndpoints(peer))
+	block, _ := client.QueryBlockByHash([]byte(blockHash), ledger.WithTargetEndpoints(peer))
 
 	ret, err := json.Marshal(block)
 	log.Print("================ GET BLOCK BY HASH Start======================")
@@ -843,6 +989,24 @@ func GetPayload(e *common.Envelope) (*common.Payload, error) {
 	payload := &common.Payload{}
 	_ = proto.Unmarshal(e.Payload, payload)
 	return payload, nil
+}
+
+func queryBlockByTXID(channelID string, txid string) *common.Block{
+	log.Print("================ queryBlockByTXID ======================")
+	// define response
+	type response struct {
+		Success bool
+		Message string
+	}
+
+	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"), fabsdk.WithOrg("org1"))
+	client, err := ledger.New(channelContext)
+	if err != nil {
+		log.Fatalf("Failed to create new ledger client: %s", err)
+	}
+	block, _ := client.QueryBlockByTxID(fab.TransactionID(txid), ledger.WithTargetEndpoints("peer0.org1.example.com"))
+
+        return block
 }
 
 func getBlockByTXID(w http.ResponseWriter, r *http.Request) {
@@ -865,8 +1029,8 @@ func getBlockByTXID(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("Failed to create new ledger client: %s", err)
 	}
-	txid := r.Form.Get("txid") 
-	block, _ := client.QueryBlockByTxID(fab.TransactionID(txid),ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
+	txid := r.Form.Get("txid")
+	block, _ := client.QueryBlockByTxID(fab.TransactionID(txid), ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
 
 	//write block to file,then use confixlator to parse and get info  here
 
@@ -907,9 +1071,8 @@ func getTransactionByID(w http.ResponseWriter, r *http.Request) {
 		w.Write(out1)
 		return
 	}
-	txid := r.Form.Get("txid") 
-	tx, err := client.QueryTransaction(fab.TransactionID(txid),ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
-
+	txid := r.Form.Get("txid")
+	tx, err := client.QueryTransaction(fab.TransactionID(txid), ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
 
 	if err != nil {
 		res.Success = false
@@ -923,81 +1086,85 @@ func getTransactionByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func extractData(buf *lutil.Buffer) (*common.BlockData, error) {
-    data := &common.BlockData{}
-    var numItems uint64
-    var err error
+	data := &common.BlockData{}
+	var numItems uint64
+	var err error
 
-    if numItems, err = buf.DecodeVarint(); err != nil {
-        return nil, err
-    }
-    for i := uint64(0); i < numItems; i++ {
-        var txEnvBytes []byte
-        if txEnvBytes, err = buf.DecodeRawBytes(false); err != nil {
-            return nil, err
-        }
-        data.Data = append(data.Data, txEnvBytes)
-    }
-    return data, nil
+	if numItems, err = buf.DecodeVarint(); err != nil {
+		return nil, err
+	}
+	for i := uint64(0); i < numItems; i++ {
+		var txEnvBytes []byte
+		if txEnvBytes, err = buf.DecodeRawBytes(false); err != nil {
+			return nil, err
+		}
+		data.Data = append(data.Data, txEnvBytes)
+	}
+	return data, nil
 }
 
 func extractTxID(txEnvelopBytes []byte) (string, error) {
-    txEnvelope, err := putil.GetEnvelopeFromBlock(txEnvelopBytes)
-    if err != nil {
-        return "", err
-    }
-    txPayload, err := GetPayload(txEnvelope)
-    if err != nil {
-        return "", nil
-    }
-    chdr, err := putil.UnmarshalChannelHeader(txPayload.Header.ChannelHeader)
-    if err != nil {
-        return "", err
-    }
-    return chdr.TxId, nil
+	txEnvelope, err := putil.GetEnvelopeFromBlock(txEnvelopBytes)
+	if err != nil {
+		return "", err
+	}
+	txPayload, err := GetPayload(txEnvelope)
+	if err != nil {
+		return "", nil
+	}
+	chdr, err := putil.UnmarshalChannelHeader(txPayload.Header.ChannelHeader)
+	if err != nil {
+		return "", err
+	}
+	return chdr.TxId, nil
 }
 
+//insert history blocks and txs into db
+func handleBlock(block *common.Block,chaincodeName string) {
+	var str string
 
-// Parse a block
-func handleBlock(block * common.Block) {
-    fmt.Printf("Block: Number=[%d], CurrentBlockHash=[%s], PreviousBlockHash=[%s]\n",
-        block.GetHeader().Number,
-        base64.StdEncoding.EncodeToString(block.GetHeader().DataHash),
-        base64.StdEncoding.EncodeToString(block.GetHeader().PreviousHash))
+	if block == nil {
+		return
+	}
+	txCount := 0
+	if putil.IsConfigBlock(block) {
+		fmt.Printf("txid=CONFIGBLOCK\n")
+		return
+	} else {
+		for _, txEnvBytes := range block.GetData().GetData() {
+			txEnvelopeBytes := block.Data.Data[0]
+			txEnvelope, err := putil.GetEnvelopeFromBlock(txEnvelopeBytes)
 
-    if putil.IsConfigBlock(block) {
-        fmt.Printf("    txid=CONFIGBLOCK\n")
-    } else {
-        for _, txEnvBytes := range block.GetData().GetData() {
-		fmt.Print("+++++++++++++")
-		fmt.Print(block.GetData())
-            if txid, err := extractTxID(txEnvBytes); err != nil {
-                fmt.Printf("ERROR: Cannot extract txid, error=[%v]\n", err)
-                return
-            } else {
-                fmt.Printf("  handleBlock get txid=%s\n", txid)
-            }
-        }
-    }
+			payload := &common.Payload{}
+			err = proto.Unmarshal(txEnvelope.Payload, payload)
+			if err != nil {
+				return
+			}
 
-    // write block to file
-    _, err := proto.Marshal(block)
-    if err != nil {
-        fmt.Printf("ERROR: Cannot marshal block, error=[%v]\n", err)
-        return
-    }
+			channelHeader := &common.ChannelHeader{}
+			err = proto.Unmarshal(payload.Header.ChannelHeader, channelHeader)
+			if err != nil {
+				return
+			}
+			t, err := ptypes.Timestamp(channelHeader.Timestamp)
+			if err != nil {
+				fmt.Println(err)
+			}
+			str = t.Format("2006-01-02 15:04:05")
 
-    //filename := fmt.Sprintf("block%d.block", block.GetHeader().Number)
-    /*if err := ioutil.WriteFile(filename, b, 0644); err != nil {
-        fmt.Printf("ERROR: Cannot write block to file:[%s], error=[%v]\n", filename, err)
-    }*/
+			if txid, err := extractTxID(txEnvBytes); err != nil {
+				fmt.Printf("ERROR: Cannot extract txid, error=[%v]\n", err)
+				return
+			} else {
+				fmt.Printf("  handleBlock get txid=%s\n", txid)
+				txCount++
 
-    // Then you could use utility to read block content, like:
-    // $ configtxlator proto_decode --input block0.block --type common.Block
+				txSqlInsert(block.GetHeader().Number,txid, str, chaincodeName, channel_genesis_hash)
+			}
+		}
+	}
+	blocksSqlInsert(int(block.GetHeader().Number), txCount, str, base64.StdEncoding.EncodeToString(block.GetHeader().PreviousHash), base64.StdEncoding.EncodeToString(block.GetHeader().DataHash), channel_genesis_hash)
 }
-
-
-
-
 
 func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	log.Print("================ getBlockByNumber ======================")
@@ -1018,8 +1185,8 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	}
 	channelID := r.Form.Get("channelID")
 	blockID := r.Form.Get("blockID")
-        log.Print(blockID)
-	blockNumber,err := strconv.ParseUint(blockID,10,64)
+	log.Print(blockID)
+	blockNumber, err := strconv.ParseUint(blockID, 10, 64)
 	if err != nil {
 		panic(err)
 	}
@@ -1036,13 +1203,10 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 		w.Write(out1)
 		return
 	}
+	block, _ := client.QueryBlock(blockNumber, ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
 
-	block, _ := client.QueryBlock(blockNumber,ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
-
-	fmt.Print(block)
-
-	handleBlock(block)
-	//write block to file,use configtxlator to parse ,get useful info 
+	//handleBlock(block)
+	//write block to file,use configtxlator to parse ,get useful info
 
 	//ret1, err := json.Marshal(block)
 
@@ -1056,9 +1220,8 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("++++++++++++++++++++++++++++++++++++++parse block ret+++++++++++++++++++++++++++++++++++")
 	fmt.Print(buf)*/
-	pos := strings.IndexAny(block.Data.String(),"@")
-	txid, err := json.Marshal(block.Data.String()[pos+1:pos+65])
-
+	pos := strings.IndexAny(block.Data.String(), "@")
+	txid, err := json.Marshal(block.Data.String()[pos+1 : pos+65])
 
 	res.Success = true
 	res.Message = "txid:" + string(txid)
@@ -1066,6 +1229,19 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	ret, err := json.Marshal(res)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(ret)
+}
+
+func handleBlockByNumber(channelID string,chaincodeName string,blockNumber uint64) {
+
+	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"), fabsdk.WithOrg("org1"))
+	client, err := ledger.New(channelContext)
+	if err != nil {
+		return
+	}
+
+	block, _ := client.QueryBlock(blockNumber, ledger.WithTargetEndpoints("peer0.org1.example.com"))
+
+	handleBlock(block,chaincodeName)    //insert history blocks and txs into db
 }
 
 func QueryChannelConfig(w http.ResponseWriter, r *http.Request) {
@@ -1080,7 +1256,7 @@ func QueryChannelConfig(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
- 	channelID := r.Form.Get("channelID")
+	channelID := r.Form.Get("channelID")
 
 	org := r.Header.Get("orgName")
 	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser(user), fabsdk.WithOrg(org))
@@ -1090,7 +1266,7 @@ func QueryChannelConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	block, _ := client.QueryConfig(ledger.WithTargetEndpoints(r.URL.Query().Get("peer")))
-fmt.Print(block)
+	fmt.Print(block)
 	ret, err := json.Marshal(block)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(ret)
@@ -1117,10 +1293,10 @@ func GetPeers(w http.ResponseWriter, r *http.Request) {
 	chProvider := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"), fabsdk.WithOrg(org))
 	chCtx, _ := chProvider()
 	discoveryService, _ := chCtx.ChannelService().Discovery()
-	peers1,err:= discoveryService.GetPeers()
+	peers1, err := discoveryService.GetPeers()
 	ret := ""
-	if err == nil{
-		for _,peer1 :=range peers1{
+	if err == nil {
+		for _, peer1 := range peers1 {
 			fmt.Print(peer1)
 			fmt.Print("\n")
 			ret = ret + peer1.URL()
@@ -1149,7 +1325,7 @@ func GetPeers(w http.ResponseWriter, r *http.Request) {
 	res := response{
 		Success: true,
 		Message: ret,
-		}
+	}
 	ret1, err := json.Marshal(res)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(ret1)
@@ -1173,14 +1349,14 @@ func IsPeerInChannel(w http.ResponseWriter, r *http.Request) {
 	ctx, _ := ctxProvider()
 
 	var client *discovery.Client
-	client, _  = discovery.New(ctx)
-	reqCtx, _:= context.NewRequest(ctx, context.WithTimeout(10*time.Second))
+	client, _ = discovery.New(ctx)
+	reqCtx, _ := context.NewRequest(ctx, context.WithTimeout(10*time.Second))
 
 	req := discovery.NewRequest().OfChannel(channelID).AddPeersQuery()
 
-	peerCfg1, _:= comm.NetworkPeerConfig(ctx.EndpointConfig(), peer)
+	peerCfg1, _ := comm.NetworkPeerConfig(ctx.EndpointConfig(), peer)
 
-	responses, _:= client.Send(reqCtx, req, peerCfg1.PeerConfig)
+	responses, _ := client.Send(reqCtx, req, peerCfg1.PeerConfig)
 	fmt.Print(responses)
 	resp := responses[0]
 	fmt.Print(reflect.TypeOf(resp))
@@ -1188,19 +1364,19 @@ func IsPeerInChannel(w http.ResponseWriter, r *http.Request) {
 	fmt.Print(resp)
 	str := fmt.Sprintf("%v", resp)
 	fmt.Println(str)
-	
+
 	res := response{
 		Success: true,
 		Message: "",
 	}
-	
-	pos :=strings.Index(str, "access denied")
+
+	pos := strings.Index(str, "access denied")
 	fmt.Print(pos)
 
-	if pos>0{
+	if pos > 0 {
 		res.Success = false
 		res.Message = "not in channel"
-	}else{
+	} else {
 		res.Message = "in channel"
 	}
 
