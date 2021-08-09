@@ -102,11 +102,11 @@ func sqlOpen() {
 	checkErr(err)
 }
 
-func txSqlInsert(blockid uint64,txhash string, createdt string, chaincodename string, channel_genesis_hash string) {
+func txSqlInsert(blockid uint64,txhash string, createdt string, creator_msp_id string, chaincodename string, channel_genesis_hash string) {
 	//插入数据
-	stmt, err := db.Prepare("INSERT INTO transactions(blockid,txhash,createdt,chaincodename,channel_genesis_hash) VALUES($1,$2,$3,$4,$5) RETURNING id")
+	stmt, err := db.Prepare("INSERT INTO transactions(blockid,txhash,createdt,creator_msp_id,chaincodename,channel_genesis_hash) VALUES($1,$2,$3,$4,$5,$6) RETURNING id")
 	checkErr(err)
-	res, err := stmt.Exec(blockid,txhash, createdt, chaincodename, channel_genesis_hash)
+	res, err := stmt.Exec(blockid,txhash, createdt, creator_msp_id,chaincodename, channel_genesis_hash)
 	checkErr(err)
 
 	affect, err := res.RowsAffected()
@@ -696,7 +696,7 @@ func invokeCC(w http.ResponseWriter, r *http.Request) {
 		res.TxID = string(response.TransactionID)
 
 		block :=queryBlockByTXID("mychannel", res.TxID)
-		txSqlInsert(block.Header.Number,res.TxID, str, vars["chaincodeName"], channel_genesis_hash)
+		txSqlInsert(block.Header.Number,res.TxID, str, "Org1MSP",vars["chaincodeName"], channel_genesis_hash)
 
 		dbheight,txCount := blocksSqlSelect()
 		fmt.Print("++++++++++++height and txCountin db++++++++++++")
@@ -1159,7 +1159,7 @@ func handleBlock(block *common.Block,chaincodeName string) {
 				fmt.Printf("  handleBlock get txid=%s\n", txid)
 				txCount++
 
-				txSqlInsert(block.GetHeader().Number,txid, str, chaincodeName, channel_genesis_hash)
+				txSqlInsert(block.GetHeader().Number,txid, str, "Org1MSP",chaincodeName, channel_genesis_hash)
 			}
 		}
 	}
