@@ -1173,9 +1173,7 @@ func handleBlock(block *common.Block,chaincodeName string) {
 			if err != nil {
 				fmt.Println(err)
 			}
-			h, _ := time.ParseDuration("-8h") //translate to utc time 
 
-			t = t.Add(h)
 			str = t.Format("2006-01-02 15:04:05")
 			if txid, err := extractTxID(txEnvBytes); err != nil {
 				fmt.Printf("ERROR: Cannot extract txid, error=[%v]\n", err)
