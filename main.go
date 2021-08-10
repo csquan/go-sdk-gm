@@ -102,6 +102,19 @@ func sqlOpen() {
 	checkErr(err)
 }
 
+func peerSqlInsert(org uint64,channel_genesis_hash string, mspid string, requests string, server_hostname string, createdt string,peer_type string) {
+	 //插入数据
+	stmt, err := db.Prepare("INSERT INTO peer (org,channel_genesis_hash,mspid,requests,server_hostname,createdt,peer_type) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id")
+	checkErr(err)
+	res, err := stmt.Exec(org,channel_genesis_hash,mspid,requests,server_hostname,createdt,peer_type)
+	checkErr(err)
+
+	affect, err := res.RowsAffected()
+	checkErr(err)
+	fmt.Println("rows affect:", affect)
+}
+
+
 func txSqlInsert(blockid uint64,txhash string, createdt string, creator_msp_id string, chaincodename string, channel_genesis_hash string) {
 	//插入数据
 	stmt, err := db.Prepare("INSERT INTO transactions(blockid,txhash,createdt,creator_msp_id,chaincodename,channel_genesis_hash) VALUES($1,$2,$3,$4,$5,$6) RETURNING id")
@@ -223,6 +236,14 @@ func syncBlocks() {
 	for ; start <= int(height); start++ {
 		handleBlockByNumber("mychannel","pingan",uint64(start))
 	}
+	peerSqlInsert(1,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org1MSP","grpcs://peer0.org1.example.com:7051","localhost","2021-7-26","PEER")
+
+	peerSqlInsert(1,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org1MSP","grpcs://peer1.org1.example.com:8051","localhost","2021-7-26","PEER")
+
+	peerSqlInsert(2,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org2MSP","grpcs://peer0.org2.example.com:9051","localhost","2021-7-26","PEER")
+
+	peerSqlInsert(2,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org2MSP","grpcs://peer1.org2.example.com:10051","localhost","2021-7-26","PEER")
+
 }
 
 func authMiddleware(next http.Handler) http.Handler {
@@ -675,10 +696,12 @@ func invokeCC(w http.ResponseWriter, r *http.Request) {
 	}
 	peers := []string{peer0Org1}
 	reqPeers := channel.WithTargetEndpoints(peers...)
-
+	timelocal:= time.FixedZone("CST", 0) //translate to utc time
+	time.Local = timelocal
 	t := time.Now()
 	str := t.Format("2006-01-02 15:04:05")
-
+	fmt.Printf("cur time:+++")
+	fmt.Printf(str)
 	response, err := cc.Execute(req, reqPeers)
 
 	res := response1{
@@ -1150,8 +1173,10 @@ func handleBlock(block *common.Block,chaincodeName string) {
 			if err != nil {
 				fmt.Println(err)
 			}
-			str = t.Format("2006-01-02 15:04:05")
+			h, _ := time.ParseDuration("-8h") //translate to utc time 
 
+			t = t.Add(h)
+			str = t.Format("2006-01-02 15:04:05")
 			if txid, err := extractTxID(txEnvBytes); err != nil {
 				fmt.Printf("ERROR: Cannot extract txid, error=[%v]\n", err)
 				return
