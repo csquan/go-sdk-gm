@@ -114,6 +114,17 @@ func peerSqlInsert(org uint64,channel_genesis_hash string, mspid string, request
 	fmt.Println("rows affect:", affect)
 }
 
+func peerSqlSelect() int{
+	//查询数据
+        rows, err := db.Query("SELECT *  FROM peer;")
+	checkErr(err)
+
+	count:=0
+	for rows.Next(){
+		count++
+	}
+	return count
+}
 
 func txSqlInsert(blockid uint64,txhash string, createdt string, creator_msp_id string, chaincodename string, channel_genesis_hash string) {
 	//插入数据
@@ -236,14 +247,18 @@ func syncBlocks() {
 	for ; start <= int(height); start++ {
 		handleBlockByNumber("mychannel","pingan",uint64(start))
 	}
-	peerSqlInsert(1,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org1MSP","grpcs://peer0.org1.example.com:7051","localhost","2021-7-26","PEER")
 
-	peerSqlInsert(1,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org1MSP","grpcs://peer1.org1.example.com:8051","localhost","2021-7-26","PEER")
+	number := peerSqlSelect()
+	if number == 0{
+		fmt.Print("\n+insert peer+")
+		peerSqlInsert(1,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org1MSP","grpcs://peer0.org1.example.com:7051","localhost","2021-7-26","PEER")
 
-	peerSqlInsert(2,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org2MSP","grpcs://peer0.org2.example.com:9051","localhost","2021-7-26","PEER")
+		peerSqlInsert(1,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org1MSP","grpcs://peer1.org1.example.com:8051","localhost","2021-7-26","PEER")
 
-	peerSqlInsert(2,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org2MSP","grpcs://peer1.org2.example.com:10051","localhost","2021-7-26","PEER")
+		peerSqlInsert(2,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org2MSP","grpcs://peer0.org2.example.com:9051","localhost","2021-7-26","PEER")
 
+		peerSqlInsert(2,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org2MSP","grpcs://peer1.org2.example.com:10051","localhost","2021-7-26","PEER")
+	}
 }
 
 func authMiddleware(next http.Handler) http.Handler {
