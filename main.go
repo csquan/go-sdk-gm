@@ -696,7 +696,7 @@ func invokeCC(w http.ResponseWriter, r *http.Request) {
 	}
 	peers := []string{peer0Org1}
 	reqPeers := channel.WithTargetEndpoints(peers...)
-	timelocal:= time.FixedZone("CST", 0) //translate to utc time
+	timelocal:= time.FixedZone("CST", 8*3600) //translate to local time
 	time.Local = timelocal
 	t := time.Now()
 	str := t.Format("2006-01-02 15:04:05")
@@ -1173,6 +1173,8 @@ func handleBlock(block *common.Block,chaincodeName string) {
 			if err != nil {
 				fmt.Println(err)
 			}
+                        m, _ := time.ParseDuration("8h")
+			t = t.Add(m)
 
 			str = t.Format("2006-01-02 15:04:05")
 			if txid, err := extractTxID(txEnvBytes); err != nil {
