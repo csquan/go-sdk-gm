@@ -109,10 +109,34 @@ func peerSqlInsert(org uint64,channel_genesis_hash string, mspid string, request
 	res, err := stmt.Exec(org,channel_genesis_hash,mspid,requests,server_hostname,createdt,peer_type)
 	checkErr(err)
 
-	affect, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	checkErr(err)
-	fmt.Println("rows affect:", affect)
 }
+
+func sqlDelete(name string) {
+	//删除数据
+	stmt, err := db.Prepare("delete from chaincodes where name=$1")
+	checkErr(err)
+
+	res, err := stmt.Exec(name)
+	checkErr(err)
+
+	_, err = res.RowsAffected()
+	checkErr(err)
+}
+
+func chaincodeSqlDelandInsert(name string ,version string,path string,txcount int ,channel_genesis_hash string){
+
+       sqlDelete("pingan")
+
+       stmt, err := db.Prepare("INSERT INTO chaincodes(name,version,path,txcount,channel_genesis_hash) VALUES($1,$2,$3,$4,$5) RETURNING id")
+       checkErr(err)
+       res, err := stmt.Exec(name,version,path,txcount,channel_genesis_hash)
+       checkErr(err)
+
+       _, err = res.RowsAffected()
+       checkErr(err)
+ }
 
 func peerSqlSelect() int{
 	//查询数据
@@ -126,6 +150,22 @@ func peerSqlSelect() int{
 	return count
 }
 
+func chaincodeSqlGetTxCount(name string) int {
+	//查询数据
+	sql := "SELECT txcount  FROM chaincodes where name = '" + name + "';";
+	rows, err := db.Query(sql)
+	checkErr(err)
+
+
+	count := 0
+	for rows.Next() {
+		err = rows.Scan(&count)
+		checkErr(err)
+	}
+
+	return count
+}
+
 func txSqlInsert(blockid uint64,txhash string, createdt string, creator_msp_id string, chaincodename string, channel_genesis_hash string) {
 	//插入数据
 	stmt, err := db.Prepare("INSERT INTO transactions(blockid,txhash,createdt,creator_msp_id,chaincodename,channel_genesis_hash) VALUES($1,$2,$3,$4,$5,$6) RETURNING id")
@@ -133,9 +173,8 @@ func txSqlInsert(blockid uint64,txhash string, createdt string, creator_msp_id s
 	res, err := stmt.Exec(blockid,txhash, createdt, creator_msp_id,chaincodename, channel_genesis_hash)
 	checkErr(err)
 
-	affect, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	checkErr(err)
-	fmt.Println("rows affect:", affect)
 }
 
 func blocksSqlInsert(blocknum int, txcount int, createdt string, prev_blockhash string, blockhash string, channel_genesis_hash string) {
@@ -146,9 +185,19 @@ func blocksSqlInsert(blocknum int, txcount int, createdt string, prev_blockhash 
 	res, err := stmt.Exec(blocknum, txcount, createdt, prev_blockhash, blockhash, channel_genesis_hash)
 	checkErr(err)
 
-	affect, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	checkErr(err)
-	fmt.Println("rows affect:", affect)
+}
+
+func channelSqlInsert(name  string, blocks int, trans int,channel_genesis_hash string){
+      stmt, err := db.Prepare("INSERT INTO channel(name, blocks, trans,channel_genesis_hash) VALUES($1,$2,$3,$4) RETURNING id")
+      checkErr(err)
+
+      res, err := stmt.Exec(name, blocks,trans,channel_genesis_hash)
+      checkErr(err)
+
+      _, err = res.RowsAffected()
+      checkErr(err)
 }
 
 func blocksSqlUpdate(blocknum int, txcount int){
@@ -159,10 +208,8 @@ func blocksSqlUpdate(blocknum int, txcount int){
      res, err := stmt.Exec(txcount, blocknum)
      checkErr(err)
 
-     affect, err := res.RowsAffected()
+     _, err = res.RowsAffected()
      checkErr(err)
-
-     fmt.Println(affect)
 }
 
 func blocksSqlSelect() (int,int){
@@ -244,20 +291,30 @@ func syncBlocks() {
 	}
 	fmt.Print("\n sync history blocks from %d to %d",start,max)
 
+	txcounts := 0
 	for ; start <= int(height); start++ {
-		handleBlockByNumber("mychannel","pingan",uint64(start))
+		txcounts = txcounts + handleBlockByNumber("mychannel","pingan",uint64(start))
 	}
+
+	//insert channel info into table
+	channelSqlInsert("mychannel",max-1,txcounts,channel_genesis_hash)
 
 	number := peerSqlSelect()
 	if number == 0{
 		fmt.Print("\n+insert peer+")
-		peerSqlInsert(1,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org1MSP","grpcs://peer0.org1.example.com:7051","localhost","2021-7-26","PEER")
+		peerSqlInsert(1,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org1MSP","grpcs://peer0.org1.example.com:7051","peer0.org1.example.com","2021-7-26","PEER")
 
-		peerSqlInsert(1,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org1MSP","grpcs://peer1.org1.example.com:8051","localhost","2021-7-26","PEER")
+		peerSqlInsert(1,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org1MSP","grpcs://peer1.org1.example.com:8051","peer1.org1.example.com","2021-7-26","PEER")
 
-		peerSqlInsert(2,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org2MSP","grpcs://peer0.org2.example.com:9051","localhost","2021-7-26","PEER")
+		peerSqlInsert(2,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org2MSP","grpcs://peer0.org2.example.com:9051","peer0.org2.example.com","2021-7-26","PEER")
 
-		peerSqlInsert(2,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org2MSP","grpcs://peer1.org2.example.com:10051","localhost","2021-7-26","PEER")
+		peerSqlInsert(2,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","Org2MSP","grpcs://peer1.org2.example.com:10051","peer1.org2.example.com","2021-7-26","PEER")
+
+		peerSqlInsert(3,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","OrderMSP","grpcs://orderer.example.com:7050","orderer.example.com","2021-7-26","ORDERER")
+		peerSqlInsert(3,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","OrderMSP","grpcs://orderer2.example.com:8050","orderer2.example.com","2021-7-26","ORDERER")
+		peerSqlInsert(3,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","OrderMSP","grpcs://orderer3.example.com:9050","orderer3.example.com","2021-7-26","ORDERER")
+		peerSqlInsert(3,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","OrderMSP","grpcs://orderer4.example.com:10050","orderer4.example.com","2021-7-26","ORDERER")
+		peerSqlInsert(3,"573f3ff5686831e322cb1c02769ebd5519ec7b3618cabcc1dca1705a6a7e1808","OrderMSP","grpcs://orderer5.example.com:11050","orderer5.example.com","2021-7-26","ORDERER")
 	}
 }
 
@@ -1157,17 +1214,17 @@ func extractTxID(txEnvelopBytes []byte) (string, error) {
 	return chdr.TxId, nil
 }
 
-//insert history blocks and txs into db
-func handleBlock(block *common.Block,chaincodeName string) {
+//insert history blocks and txs into db ,return txs in block
+func handleBlock(block *common.Block,chaincodeName string) int{
 	var str string
 
 	if block == nil {
-		return
+		return 0
 	}
 	txCount := 0
 	if putil.IsConfigBlock(block) {
 		fmt.Printf("txid=CONFIGBLOCK\n")
-		return
+		return 0
 	} else {
 		for _, txEnvBytes := range block.GetData().GetData() {
 			txEnvelopeBytes := block.Data.Data[0]
@@ -1176,13 +1233,13 @@ func handleBlock(block *common.Block,chaincodeName string) {
 			payload := &common.Payload{}
 			err = proto.Unmarshal(txEnvelope.Payload, payload)
 			if err != nil {
-				return
+				return 0
 			}
 
 			channelHeader := &common.ChannelHeader{}
 			err = proto.Unmarshal(payload.Header.ChannelHeader, channelHeader)
 			if err != nil {
-				return
+				return 0
 			}
 			t, err := ptypes.Timestamp(channelHeader.Timestamp)
 			if err != nil {
@@ -1194,16 +1251,25 @@ func handleBlock(block *common.Block,chaincodeName string) {
 			str = t.Format("2006-01-02 15:04:05")
 			if txid, err := extractTxID(txEnvBytes); err != nil {
 				fmt.Printf("ERROR: Cannot extract txid, error=[%v]\n", err)
-				return
+				return 0
 			} else {
-				fmt.Printf("  handleBlock get txid=%s\n", txid)
+				//fmt.Printf("  handleBlock get txid=%s\n", txid)
 				txCount++
 
 				txSqlInsert(block.GetHeader().Number,txid, str, "Org1MSP",chaincodeName, channel_genesis_hash)
 			}
 		}
+		//get txcount from chaincodes table
+		oldtxcount := chaincodeSqlGetTxCount(chaincodeName)
+		/*fmt.Print("table chaincodes already had ")
+		fmt.Print(oldtxcount)
+		fmt.Print(" txs,update to ")
+		fmt.Print(oldtxcount + txCount)
+		fmt.Print("\n")*/
+		chaincodeSqlDelandInsert(chaincodeName,"v1.0","github/pingan",oldtxcount + txCount,channel_genesis_hash)
 	}
 	blocksSqlInsert(int(block.GetHeader().Number), txCount, str, base64.StdEncoding.EncodeToString(block.GetHeader().PreviousHash), base64.StdEncoding.EncodeToString(block.GetHeader().DataHash), channel_genesis_hash)
+	return txCount
 }
 
 func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
@@ -1271,17 +1337,18 @@ func getBlockByNumber(w http.ResponseWriter, r *http.Request) {
 	w.Write(ret)
 }
 
-func handleBlockByNumber(channelID string,chaincodeName string,blockNumber uint64) {
+func handleBlockByNumber(channelID string,chaincodeName string,blockNumber uint64) int {
 
 	channelContext := sdk.ChannelContext(channelID, fabsdk.WithUser("Admin"), fabsdk.WithOrg("org1"))
 	client, err := ledger.New(channelContext)
 	if err != nil {
-		return
+		return 0
 	}
 
 	block, _ := client.QueryBlock(blockNumber, ledger.WithTargetEndpoints("peer0.org1.example.com"))
 
-	handleBlock(block,chaincodeName)    //insert history blocks and txs into db
+	txcount := handleBlock(block,chaincodeName)    //insert history blocks and txs into db
+	return txcount
 }
 
 func QueryChannelConfig(w http.ResponseWriter, r *http.Request) {
