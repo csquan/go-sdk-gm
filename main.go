@@ -150,6 +150,18 @@ func peerSqlSelect() int{
 	return count
 }
 
+func channelSqlSelect() int{
+	//查询数据
+	rows, err := db.Query("SELECT *  FROM channel;")
+	checkErr(err)
+
+	count:=0
+	for rows.Next(){
+		count++
+	}
+	return count
+}
+
 func chaincodeSqlGetTxCount(name string) int {
 	//查询数据
 	sql := "SELECT txcount  FROM chaincodes where name = '" + name + "';";
@@ -296,8 +308,11 @@ func syncBlocks() {
 		txcounts = txcounts + handleBlockByNumber("mychannel","pingan",uint64(start))
 	}
 
-	//insert channel info into table
-	channelSqlInsert("mychannel",max-1,txcounts,channel_genesis_hash)
+	channelnumber := channelSqlSelect()
+	if channelnumber == 0{
+		//insert channel info into table
+		channelSqlInsert("mychannel",max-1,txcounts,channel_genesis_hash)
+	}
 
 	number := peerSqlSelect()
 	if number == 0{
